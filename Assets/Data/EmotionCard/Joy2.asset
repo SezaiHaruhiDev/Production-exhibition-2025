@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 022a2c30795de0448b9d4d55fd3a7d1d, type: 3}
+  m_Name: Joy2
+  m_EditorClassIdentifier: Assembly-CSharp::EmotionCardData
+  emotionName: "\u559C\u3073"
+  emotion: 0
+  level: 2

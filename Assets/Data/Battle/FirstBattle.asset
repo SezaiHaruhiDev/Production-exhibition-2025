@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b53ff6b721e48ed8d19fb8169cd2c6, type: 3}
+  m_Name: FirstBattle
+  m_EditorClassIdentifier: Assembly-CSharp::BattleSO
+  battleID: 0
+  partyType: 0
+  phases:
+  - allEnemy:
+    - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
+  - allEnemy:
+    - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
+  rentalParty: {fileID: 0}
