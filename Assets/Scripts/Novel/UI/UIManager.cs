@@ -15,6 +15,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] GameObject SkipButton;
     [SerializeField] GameObject MenuButton;
 
+    [SerializeField] GameObject FilmNoiseObj;
+
     /// <summary>
     /// UI（テキストパネル、ログボタン等）の表示・非表示を切り替える
     /// </summary>
@@ -36,6 +38,12 @@ public class UIManager : MonoBehaviour
         if (cmd.parameters.TryGetValue("menubutton", out string menubstring) && int.TryParse(menubstring, out int menuValue))
         {
             if (MenuButton != null) MenuButton.SetActive(menuValue == 1);
+        }
+        
+        // レトロノイズの表示切り替え
+        if (cmd.parameters.TryGetValue("filmnoise", out string filmstring) && int.TryParse(filmstring, out int filmValue))
+        {
+            if (FilmNoiseObj != null) FilmNoiseObj.SetActive(filmValue == 1);
         }
     }
 }

@@ -1,11 +1,35 @@
+using System;
 using System.Collections.Generic;
+using HierarchyIcons;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using Yagir.inc.HierarchyIcons.Scripts;
 using Object = UnityEngine.Object;
 
-namespace HierarchyIcons.Editor
+namespace Yagir.inc.HierarchyIcons.Editor
 {
+    static class TypeIconCache
+    {
+        static readonly Dictionary<Type, GUIContent> cache = new();
+
+        public static GUIContent Get(Type t, Component instanceIfYouHaveIt = null)
+        {
+            if (cache.TryGetValue(t, out var gc) && gc != null && gc.image != null)
+                return gc;
+
+            var content = EditorGUIUtility.ObjectContent(instanceIfYouHaveIt, t);
+            var tex = content?.image;
+
+            if (tex == null)
+                tex = AssetPreview.GetMiniTypeThumbnail(t);
+
+            gc = new GUIContent(tex);
+            cache[t] = gc;
+            return gc;
+        }
+    }
+
     [InitializeOnLoad]
     class HierarchyIcons
     {
@@ -16,30 +40,31 @@ namespace HierarchyIcons.Editor
             EditorApplication.hierarchyWindowItemOnGUI += HandleHierarchyWindowItemOnGUI;
         }
 
-        private static Vector2 offset = new Vector2(18, 0);
+        private static readonly Vector2 offset = new Vector2(18, 0);
 
-
-        private static Dictionary<string, GUIContent> iconsNames = new Dictionary<string, GUIContent>();
+        private static readonly Dictionary<string, GUIContent> iconsNames = new Dictionary<string, GUIContent>();
+    
         private static GUIContent tmpText;
-
         private static Dictionary<Transform, bool> openedFolders = new Dictionary<Transform, bool>(); 
 
         private static void HandleHierarchyWindowItemOnGUI(int instanceID, Rect selectionRect)
         {
-            var obj = EditorUtility.InstanceIDToObject(instanceID);
+            Object obj = EditorUtility.InstanceIDToObject(instanceID);
 
+            switch (Event.current.type)
+            {
+                case EventType.Repaint:
+                    Repaint(obj, selectionRect);
+                    break;
+            }
+            
             if (Event.current.type == EventType.Layout)
             {
                 openedFolders = new Dictionary<Transform, bool>();
                 CheckFolders(obj);
             }
-
-            if (Event.current.type == EventType.Repaint)
-            {
-                Repaint(obj, selectionRect);
-            }
         }
-
+        
         public static void CheckFolders(Object obj)
         {
             if (obj != null)
@@ -48,63 +73,148 @@ namespace HierarchyIcons.Editor
                 var parent = go.transform.parent;
                 if (parent != null && parent.GetComponent<Folder>())
                 {
-                    if (!openedFolders.ContainsKey(parent))
-                    {
-                        openedFolders.Add(parent, true);
-                    }
+                    openedFolders.TryAdd(parent, true);
                 }
             }
         }
 
-        public static void Repaint(Object obj, Rect selectionRect)
+        private static bool IsManager(string name)
+        {
+            for (var i = 0; i < list.gameManagerIconFor.Count; i++)
+            {
+                if (HasToken(name, list.gameManagerIconFor[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void Repaint(Object obj, Rect selectionRect)
         {
             if (CreateSingleton())
             {
                 if (obj != null)
                 {
-                    var gameObject = (obj as GameObject);
+                    GameObject gameObject = obj as GameObject;
+                
                     selectionRect.position += offset;
 
-                    var iconPos = GetIconPos(selectionRect);
-                    bool isfolder = false;
-
-                    var itemName = gameObject.transform.name.ToLower();
+                    Rect iconPos = GetIconPos(selectionRect);
+                    if (gameObject == null) return;
                 
-                    if (gameObject.GetComponent<Folder>())
-                    {
-                        RepaintFolders(gameObject,iconPos);
-                        isfolder = true;
-                    }
-                    else if (gameObject.TryGetComponent(out Light light))
-                    {
+                    if (gameObject.TryGetComponent(out Light light))
                         GUI.Label(iconPos, DrawLightIcon(light.type));
-                    }
-                    else if (itemName.Contains("manager") || itemName.Contains("context") || itemName.Contains("controller") || itemName.Contains("service"))
-                    {
-                        GUI.Label(iconPos, EditorGUIUtility.IconContent("GameManager Icon"));
-                    }
+                    else if (IsManager(gameObject.name))
+                        GUI.Label(iconPos, GameManagerIcon);
                     else if (gameObject.GetComponent<TMP_Text>())
                     {
                         iconPos.size = Vector2.one * 18;
                         iconPos.position += new Vector2(3, 2.5f);
                         GUI.Label(iconPos, tmpText);
+                    }else
+                    if (gameObject.GetComponent<Folder>())
+                    {
+                        RepaintFolders(gameObject,iconPos);
                     }
                     else
-                    {
                         RepaintComponent(gameObject, iconPos);
-                    }
+                }
+            }
+        }
+    
+        static bool HasToken(string name, string token) => name.IndexOf(token, System.StringComparison.OrdinalIgnoreCase) >= 0;
 
-                    if (list.allEmptyFolders && !isfolder && gameObject.transform.localPosition == Vector3.zero)
+        private static void RepaintComponent(GameObject go,  Rect iconPos)
+        {
+            for (int i = 0; i < list.icons.Count; i++)
+            {
+                string type = list.icons[i];
+                var cmp = go.GetComponent(type);
+                
+                if (cmp && cmp is Folder == false)
+                {
+                    iconPos.size = Vector2.one * 20;
+                    iconPos.position -= Vector2.down * 2.5f;
+                    iconPos.position += Vector2.right * 2f;
+
+                    string key = $"d_{list.icons[i]} Icon";
+                
+                    if (!iconsNames.TryGetValue(key, out var name))
                     {
-                        if (gameObject.transform.GetComponents<Component>().Length == 1)
-                        {
-                            gameObject.AddComponent<Folder>();
-                        }
+                        var gui = TypeIconCache.Get(cmp.GetType(), cmp);
+                        if (gui == null) continue;
+                    
+                        GUIContent icon = gui;
+
+                    
+                        iconsNames.Add(key, icon);
                     }
+                    else
+                        GUI.Label(iconPos, name);
+
+                    return;
+                }
+                else if (cmp is Folder)
+                {
+                    iconPos.size = Vector2.one * 20;
+                    iconPos.position -= Vector2.down * 2.5f;
+                    iconPos.position += Vector2.right * 2f;
+                    GUI.Label(iconPos, FolderIcon);
                 }
             }
         }
 
+        private static bool CreateSingleton()
+        {
+            if (list == null)
+            {
+                string[] find = AssetDatabase.FindAssets("t:IconsList");
+            
+                if (find.Length != 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(find[0]);
+                
+                    list = AssetDatabase.LoadAssetAtPath<IconsList>(path);
+
+                    string[] tmptextIcons = AssetDatabase.FindAssets("TMP - Text Component Icon");
+                
+                    if (tmptextIcons.Length != 0)
+                    {
+                        Texture2D tmpIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(tmptextIcons[0]));
+                        tmpText = new GUIContent(tmpIcon);
+                    }
+                
+                }
+            }
+
+            return list != null;
+        }
+
+        private static readonly GUIContent DirLightIcon = EditorGUIUtility.IconContent("d_DirectionalLight Icon");
+        private static readonly GUIContent SpotLightIcon = EditorGUIUtility.IconContent("d_Spotlight Icon");
+        private static readonly GUIContent LightIcon     = EditorGUIUtility.IconContent("d_Light Icon");
+        private static readonly GUIContent GameManagerIcon     = EditorGUIUtility.IconContent("GameManager Icon");
+        private static readonly GUIContent FolderIcon     = EditorGUIUtility.IconContent("d_Folder Icon");
+
+        private static GUIContent DrawLightIcon(LightType t) => t switch
+        {
+            LightType.Directional => DirLightIcon,
+            LightType.Spot => SpotLightIcon,
+            _ => LightIcon
+        };
+
+        private static Rect GetIconPos(Rect selectionRect) 
+        {
+            Rect iconPos = selectionRect;
+            iconPos.position += new Vector2(selectionRect.width / 1.25f, 0);
+            iconPos.position -= Vector2.up * 5;
+            iconPos.size = new Vector2(25, 25);
+
+            return iconPos;
+        }
+        
         public static void RepaintFolders(GameObject go, Rect iconPos)
         {
             GUIContent folder;
@@ -131,96 +241,5 @@ namespace HierarchyIcons.Editor
             }
 
         }
-
-        public static void RepaintComponent(GameObject go,  Rect iconPos)
-        {
-            for (int i = 0; i < list.icons.Count; i++)
-            {
-
-                var type = list.icons[i];
-                if (go.GetComponent(type))
-                {
-                    iconPos.size = Vector2.one * 20;
-                    iconPos.position -= Vector2.down * 2.5f;
-                    iconPos.position += Vector2.right * 2f;
-                    var key = $"d_{list.icons[i]} Icon";
-                    if (!iconsNames.ContainsKey(key))
-                    {
-                        var icon = EditorGUIUtility.IconContent(key);
-                        if (icon != null)
-                        {
-                            iconsNames.Add(key, icon);
-                        }
-                        else
-                        {
-                            list.icons.RemoveAt(i);
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        GUI.Label(iconPos, iconsNames[key]);
-                    }
-
-                    return;
-                }
-            }
-
-        }
-
-        public static bool CreateSingleton()
-        {
-            if (list == null)
-            {
-                var find = AssetDatabase.FindAssets("t:IconsList");
-                if (find.Length != 0)
-                {
-                    var path = AssetDatabase.GUIDToAssetPath(find[0]);
-                    list = AssetDatabase.LoadAssetAtPath<IconsList>(path);
-
-
-                    var tmptextIcons = AssetDatabase.FindAssets("TMP - Text Component Icon");
-                    if (tmptextIcons.Length != 0)
-                    {
-                        var tmpIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(tmptextIcons[0]));
-                        tmpText = new GUIContent(tmpIcon);
-                    }
-                
-                }
-            }
-
-            return list != null;
-        }
-    
-        public static GUIContent DrawLightIcon(LightType lightType)
-        {
-            var type = "";
-            switch (lightType)
-            {
-                case LightType.Directional:
-                    type = "d_DirectionalLight Icon";
-                    break;
-                case LightType.Spot:
-                    type = "d_Spotlight Icon";
-                    break;
-                default:
-                    type = "d_Light Icon";
-                    break;
-
-            }
-
-            return EditorGUIUtility.IconContent(type);
-        }
-
-        public static Rect GetIconPos(Rect selectionRect)
-        {
-            var iconPos = selectionRect;
-            iconPos.position += new Vector2(selectionRect.width / 1.25f, 0);
-            iconPos.position -= Vector2.up * 5;
-            iconPos.size = new Vector2(25, 25);
-
-            return iconPos;
-        }
-
     }
 }

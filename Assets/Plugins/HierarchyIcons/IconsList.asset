@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79e04f1c55518cb4cb036453b1403a03, type: 3}
   m_Name: IconsList
   m_EditorClassIdentifier: 
+  gameManagerIconFor:
+  - manager
+  - service
+  - lifetimescope
+  - context
   icons:
   - Camera
   - Rigidbody
@@ -22,11 +27,14 @@ MonoBehaviour:
   - MeshCollider
   - Canvas
   - GraphicRaycaster
+  - CanvasGroup
   - Text
   - Outline
   - Mask
   - Image
   - Button
+  - ScrollRect
+  - Scrollbar
   - ParticleSystem
   - ReflectionProbe
   - Animator
@@ -39,8 +47,9 @@ MonoBehaviour:
   - GridLayoutGroup
   - HorizontalLayoutGroup
   - VerticalLayoutGroup
+  - NavMeshSurface
   - NavMeshObstacle
+  - NavMeshModifier
   - NavMeshAgent
   - Cloth
   - LODGroup
-  allEmptyFolders: 0

@@ -1,10 +1,9 @@
-﻿fileFormatVersion: 2
-guid: a652fd92f929484eafe7d7ff1c96ffe5
-timeCreated: 1678908850
+fileFormatVersion: 2
+guid: d375b9db21539cf4fbeef8ee473152ae
 AssetOrigin:
   serializedVersion: 1
   productId: 224856
   packageName: Hierarchy - Simple Icons
-  packageVersion: 1.0
+  packageVersion: 1.1
   assetPath: Assets/Plugins/HierarchyIcons/Editor/FolderExtension.cs
-  uploadId: 613507
+  uploadId: 853012

@@ -1,5 +1,6 @@
 #start-
 &!bg=sprite:black_bg
+&!ui=filmnoise:0
 &!ui=textpanel:0
 &!ui=logbutton:0
 &!title=name:序章 第二幕
@@ -17,6 +18,7 @@
 
 
 &!out=sub:false
+&!ui=filmnoise:1
 &!tb=state:true
 &!ui=textpanel:1
 &!ui=logbutton:1
