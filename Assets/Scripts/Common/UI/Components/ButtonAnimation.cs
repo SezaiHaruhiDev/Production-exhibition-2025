@@ -1,10 +1,12 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 namespace Common.UI
 {
     /// <summary>
     /// ボタン押下時に縮小アニメーションを適用
+    /// ボタンの当たり判定を画像と統一
     /// </summary>
     public class ButtonAnimation : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
@@ -20,6 +22,19 @@ namespace Common.UI
             if (target == null) target = GetComponent<RectTransform>();
 
             normalScale = target.localScale;
+        }
+
+        private void Start()
+        {
+            Image myImage = GetComponent<Image>();
+            if (myImage != null)
+            {
+                try
+                {
+                    myImage.alphaHitTestMinimumThreshold = 0.1f;
+                }
+                catch (System.InvalidOperationException){}
+            }
         }
 
         private void Update()
