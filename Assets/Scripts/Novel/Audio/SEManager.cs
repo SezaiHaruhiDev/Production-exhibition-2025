@@ -1,21 +1,21 @@
 using UnityEngine;
 using Novel.Data;
-using UnityEngine.Serialization;
 
 /// <summary>
 /// ノベルシーンのSE再生を管理
 /// </summary>
 public class SEManager : MonoBehaviour
 {
+    private const string KeyPlaySE = "sep";
+
     /// <summary>
     /// ノベルスクリプトからのSE再生コマンドを処理する
     /// </summary>
     public void ProcessCommand(Command cmd)
     {
-        // "sep" (SE Play) コマンドを処理
-        if (cmd.parameters.TryGetValue("sep", out string sestr))
+        if (cmd.parameters.TryGetValue(KeyPlaySE, out string seName))
         {
-            SoundManager.Instance.PlaySE(sestr);
+            SoundManager.Instance.PlaySE(seName);
         }
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 using Novel.Data;
 
 namespace Novel.System
@@ -9,21 +8,25 @@ namespace Novel.System
     /// </summary>
     public class ScenarioParser
     {
-        private const char SEPARATE_PAGE = '&';
-        private const char SEPARATE_COMMAND = '!';
-        private const char COMMAND_SEPARATE_PARAM = '=';
+        private const char SeparatorPage = '&';
+        private const char SeparatorCommand = '!';
+        private const char SeparatorParam = '=';
+        private const char SeparatorLabel = '#';
+        private const char SeparatorDash = '-';
 
         /// <summary>
-        /// テキストからラベル（#Label-Text）を抽出し、辞書を作成する
+        /// テキストからラベル（#Label-Text）を抽出
         /// </summary>
         public Dictionary<string, string> ParseLabelDictionary(string text)
         {
             var labelDict = new Dictionary<string, string>();
-            string[] chunks = text.Split('#');
+            if (string.IsNullOrEmpty(text)) return labelDict;
+
+            string[] chunks = text.Split(SeparatorLabel);
             foreach (var chunk in chunks)
             {
                 if (string.IsNullOrWhiteSpace(chunk)) continue;
-                int dashIndex = chunk.IndexOf('-');
+                int dashIndex = chunk.IndexOf(SeparatorDash);
                 if (dashIndex < 0) continue;
 
                 string key = chunk.Substring(0, dashIndex).Trim();
@@ -34,53 +37,62 @@ namespace Novel.System
         }
 
         /// <summary>
-        /// テキストをページ単位（&区切り）に分割し、コマンドとテキストを解析する
+        /// テキストをページ単位に分割し解析
         /// </summary>
         public Queue<Page> ParsePages(string text)
         {
-            string[] rawPages = text.Split(SEPARATE_PAGE);
             var queue = new Queue<Page>();
+            if (string.IsNullOrEmpty(text)) return queue;
+
+            string[] rawPages = text.Split(SeparatorPage);
 
             foreach (string raw in rawPages)
             {
                 if (string.IsNullOrWhiteSpace(raw)) continue;
 
-                if (raw[0] == SEPARATE_COMMAND)
+                if (raw.TrimStart()[0] == SeparatorCommand)
                 {
-                    var cmdPage = new Page();
-                    cmdPage.commands = ParseCommands(raw);
+                    var cmdPage = new Page { commands = ParseCommands(raw) };
                     queue.Enqueue(cmdPage);
                 }
                 else
                 {
-                    var textPage = new Page();
-                    string[] ts = raw.Split('「');
-                    if (ts.Length >= 2)
-                    {
-                        textPage.name = ts[0];
-                        string body = ts[1];
-                        int lastBracket = body.LastIndexOf('」');
-                        if (lastBracket >= 0) body = body.Remove(lastBracket);
-                        textPage.text = body;
-                        queue.Enqueue(textPage);
-                    }
+                    ParseTextPage(raw, queue);
                 }
             }
             return queue;
         }
 
+        private void ParseTextPage(string raw, Queue<Page> queue)
+        {
+            var textPage = new Page();
+            string[] ts = raw.Split('「');
+            if (ts.Length >= 2)
+            {
+                textPage.name = ts[0].Trim();
+                string body = ts[1];
+                int lastBracket = body.LastIndexOf('」');
+                if (lastBracket >= 0) body = body.Remove(lastBracket);
+                textPage.text = body;
+                queue.Enqueue(textPage);
+            }
+            else
+            {
+                 // 名前なし（地の文）のケースも想定する場合ここを拡張
+            }
+        }
+
         private List<Command> ParseCommands(string cmdLine)
         {
             var list = new List<Command>();
-            // 先頭の '!' を削除してからコマンド分割（!bg=... !se=... の形式）
-            string line = cmdLine.Remove(0, 1);
-            string[] cmds = line.Split(SEPARATE_COMMAND);
+            string line = cmdLine.Trim().TrimStart(SeparatorCommand);
+            string[] cmds = line.Split(SeparatorCommand);
 
             foreach (string c in cmds)
             {
                 if (string.IsNullOrWhiteSpace(c)) continue;
-                // "type=param" の形式で分割
-                string[] parts = c.Split(COMMAND_SEPARATE_PARAM);
+
+                string[] parts = c.Split(SeparatorParam);
                 if (parts.Length < 2) continue;
 
                 var cmd = new Command();
@@ -97,7 +109,7 @@ namespace Novel.System
                     }
                     else
                     {
-                        cmd.parameters[kvSplit[0].Trim()] = "";
+                        cmd.parameters[kvSplit[0].Trim()] = string.Empty;
                     }
                 }
                 list.Add(cmd);

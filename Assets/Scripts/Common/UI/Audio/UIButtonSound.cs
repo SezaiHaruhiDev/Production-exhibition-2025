@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Common;
 
 /// <summary>
 /// ボタンクリック時にSEを再生
@@ -28,7 +29,7 @@ public class UIButtonSound : MonoBehaviour, IPointerDownHandler
         }
         else if (!string.IsNullOrEmpty(_resourcesSEName))
         {
-            _preloadedClip = Resources.Load<AudioClip>("se/" + _resourcesSEName);
+            _preloadedClip = Resources.Load<AudioClip>(GameConstants.Resources.SEDir + _resourcesSEName);
         }
     }
 

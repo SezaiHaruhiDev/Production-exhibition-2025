@@ -1,12 +1,9 @@
 using UnityEngine;
-using TMPro;
 using UnityEngine.UI;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Data;
 using Common;
 using Novel.Data;
+using UnityEngine.Assertions;
 
 /// <summary>
 /// ノベルシーンのキャラクター画像を管理（生成、表示切替、サイズ変更）
@@ -19,22 +16,28 @@ public class CharacterManager : MonoBehaviour
 
     private Dictionary<string, Image> _characterCache = new Dictionary<string, Image>();
 
+    private void Awake()
+    {
+        Assert.IsNotNull(parent, "CharacterManager: Parent transform is not assigned!");
+        Assert.IsNotNull(characterImagePrefab, "CharacterManager: Character Image Prefab is not assigned!");
+    }
+
     /// <summary>
     /// コマンドに基づいてキャラクター画像を生成する
     /// </summary>
     public void CreateCharacter(Command cmd)
     {
-        if (characterImagePrefab == null)
-        {
-            return;
-        }
+        if (characterImagePrefab == null) return;
+
         GameObject go = Instantiate(characterImagePrefab, parent);
         Image newImage = go.GetComponent<Image>();
+
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Name, out string str))
         {
             newImage.name = str;
             _characterCache[str] = newImage;
         }
+
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Sprite, out string spstr))
         {
             Sprite sp = Resources.Load<Sprite>(spritesDirectory + spstr);
@@ -44,7 +47,7 @@ public class CharacterManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError("画像が見つかりません: " + spritesDirectory + spstr);
+                Debug.LogError($"CharacterManager: Sprite not found at {spritesDirectory}{spstr}");
             }
         }
     }
@@ -54,44 +57,48 @@ public class CharacterManager : MonoBehaviour
     /// </summary>
     public void ChangeCharacterSize(Command cmd)
     {
-        if (!cmd.parameters.TryGetValue(GameConstants.NovelCommands.Name, out string name))
-            return;
+        if (!cmd.parameters.TryGetValue(GameConstants.NovelCommands.Name, out string name)) return;
         if (!_characterCache.TryGetValue(name, out Image img))
         {
-            Debug.LogWarning($"キャラキャッシュに '{name}' が見つかりませんでした。");
+            Debug.LogWarning($"CharacterManager: Character '{name}' not found in cache.");
             return;
         }
+
         RectTransform rt = img.GetComponent<RectTransform>();
-        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Size, out string sint))
+
+        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Size, out string sizeStr))
         {
-            // Format: "width^height" (例: 500^800)
-            string[] parts = sint.Split('^');
+            // Format: "width^height"
+            string[] parts = sizeStr.Split('^');
             if (parts.Length == 2 &&
-            float.TryParse(parts[0], out float width) &&
-            float.TryParse(parts[1], out float height))
+                float.TryParse(parts[0], out float width) &&
+                float.TryParse(parts[1], out float height))
             {
                 img.rectTransform.sizeDelta = new Vector2(width, height);
             }
-            else
+        }
+
+        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Pos, out string posStr))
+        {
+            // Format: "x^y"
+            string[] parts = posStr.Split('^');
+            if (parts.Length == 2 &&
+                int.TryParse(parts[0], out int x) &&
+                int.TryParse(parts[1], out int y))
             {
-                Debug.LogWarning($"size の形式が不正です: {sint}");
+                rt.anchoredPosition = new Vector2(x, y);
             }
         }
-        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Pos, out string pint))
+
+        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Col, out string colStr))
         {
-            // Format: "x^y" (例: 100^-50)
-            string[] posparts = pint.Split('^');
-            if (posparts.Length == 2 &&
-            int.TryParse(posparts[0], out int posx) &&
-            int.TryParse(posparts[1], out int posy))
-            {
-                rt.anchoredPosition = new Vector2(posx, posy);
-            }
-        }
-        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Col, out string colint))
-        {
-            string[] colparts = colint.Split('^');
-            if (colparts.Length >= 4 && int.TryParse(colparts[0], out int r) && int.TryParse(colparts[1], out int g) && int.TryParse(colparts[2], out int b) && int.TryParse(colparts[3], out int a))
+            // Format: "r^g^b^a"
+            string[] parts = colStr.Split('^');
+            if (parts.Length >= 4 &&
+                int.TryParse(parts[0], out int r) &&
+                int.TryParse(parts[1], out int g) &&
+                int.TryParse(parts[2], out int b) &&
+                int.TryParse(parts[3], out int a))
             {
                 img.color = new Color(r / 255f, g / 255f, b / 255f, a / 255f);
             }
@@ -103,14 +110,13 @@ public class CharacterManager : MonoBehaviour
     /// </summary>
     public void ChangeCharacter(Command cmd)
     {
-        if (!cmd.parameters.TryGetValue(GameConstants.NovelCommands.Name, out string name))
-            return;
-
+        if (!cmd.parameters.TryGetValue(GameConstants.NovelCommands.Name, out string name)) return;
         if (!_characterCache.TryGetValue(name, out Image img))
         {
-            Debug.LogWarning($"キャラキャッシュに '{name}' が見つかりませんでした。");
+            Debug.LogWarning($"CharacterManager: Character '{name}' not found in cache.");
             return;
         }
+
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Sprite, out string spstr))
         {
             Sprite sp = Resources.Load<Sprite>(spritesDirectory + spstr);
@@ -120,29 +126,14 @@ public class CharacterManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError("画像が見つかりません: " + spritesDirectory + spstr);
+                Debug.LogError($"CharacterManager: Sprite not found at {spritesDirectory}{spstr}");
             }
         }
-        // Show/Hide (0: Hide, 1: Show)
-        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Show, out string show))
+
+        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Show, out string showStr) &&
+            int.TryParse(showStr, out int showState))
         {
-            if (int.TryParse(show, out int result))
-            {
-                if (result == 0)
-                {
-                    if (img != null)
-                    {
-                        img.enabled = false;
-                    }
-                }
-                else if (result == 1)
-                {
-                    if (img != null)
-                    {
-                        img.enabled = true;
-                    }
-                }
-            }
+            if (img != null) img.enabled = (showState == 1);
         }
     }
 
@@ -151,10 +142,6 @@ public class CharacterManager : MonoBehaviour
     /// </summary>
     public RectTransform GetCharacterRect(string name)
     {
-        if (_characterCache.TryGetValue(name, out Image img))
-        {
-            return img.rectTransform;
-        }
-        return null;
+        return _characterCache.TryGetValue(name, out Image img) ? img.rectTransform : null;
     }
 }

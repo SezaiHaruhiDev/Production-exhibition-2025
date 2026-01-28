@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Assertions;
 
 /// <summary>
 /// ランタイムキャラクターデータの管理（マスター + 成長データの合成）
@@ -26,8 +27,13 @@ public class LoadManager : MonoBehaviour
         Instance = this;
         transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
+        Assert.IsNotNull(registry, "LoadManager: registry is not assigned!");
     }
 
+    /// <summary>
+    /// ランタイムデータの初期化（非同期）
+    /// セーブデータとマスターデータをマージしてランタイムキャラクターを作成する
+    /// </summary>
     public IEnumerator InitializeCoroutine()
     {
         if (_initialized) yield break;
@@ -41,23 +47,26 @@ public class LoadManager : MonoBehaviour
 
         registry.Initialize();
 
-        SaveDataManager.Instance.Initialize(registry.AllyCharacters);
+        if (SaveDataManager.Instance != null)
+        {
+            SaveDataManager.Instance.Initialize(registry.AllyCharacters);
+        }
 
         _runtimeCharacterList.Clear();
 
         foreach (var master in registry.AllyCharacters)
         {
             var data = SaveDataManager.Instance.GetCharacter(master.id);
-
             RuntimeCharacter runtime = new RuntimeCharacter(master, data);
-
             _runtimeCharacterList.Add(runtime);
 
-            // 大規模データ時のフリーズ防止
             yield return null;
         }
     }
 
+    /// <summary>
+    /// ランタイムデータの変更タイプ
+    /// </summary>
     public enum RuntimeChangeType
     {
         LevelUp,
@@ -66,16 +75,16 @@ public class LoadManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ランタイム時のデータ変更（レベルアップ、HP増減など）を反映させる
+    /// 指定されたキャラクターのランタイムデータを更新する
     /// </summary>
     /// <param name="id">キャラクターID</param>
-    /// <param name="type">変更の種類</param>
+    /// <param name="type">変更内容のタイプ</param>
     public void UpdateRuntimeData(int id, RuntimeChangeType type)
     {
         RuntimeCharacter data = _runtimeCharacterList.FirstOrDefault(r => r.id == id);
         if (data == null)
         {
-            Debug.LogError($"RuntimeCharacter not found: id={id}");
+            Debug.LogError($"LoadManager: RuntimeCharacter not found (ID: {id})");
             return;
         }
 
@@ -84,22 +93,25 @@ public class LoadManager : MonoBehaviour
             case RuntimeChangeType.LevelUp:
                 data.level++;
                 break;
+            default:
+                break;
         }
     }
 
     /// <summary>
-    /// ランタイムデータをセーブデータ（辞書形式）に反映し、永続化する
+    /// 現在のランタイムデータをセーブデータ用辞書に反映し、永続化する
     /// </summary>
     /// <param name="id">キャラクターID</param>
-    /// <param name="data">最新のランタイムデータ</param>
+    /// <param name="data">反映元のランタイムデータ</param>
     public void SaveToDictionary(int id, RuntimeCharacter data)
     {
-        if (registry == null) return;
+        if (registry == null || SaveDataManager.Instance == null) return;
 
         var master = registry.GetById(id);
         if (master == null) return;
 
         var target = SaveDataManager.Instance.GetCharacter(id);
+        if (target == null) return;
 
         target.level = data.level - master.level;
         target.hp = data.maxHp - master.hp;
@@ -112,7 +124,7 @@ public class LoadManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 指定IDのランタイムキャラクターを取得する
+    /// 指定IDのランタイムキャラクターデータを取得する
     /// </summary>
     /// <param name="id">キャラクターID</param>
     /// <returns>ランタイムキャラクター（存在しない場合はnull）</returns>

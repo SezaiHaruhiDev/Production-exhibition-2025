@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Novel.System;
 using Novel.Data;
+using UnityEngine.Assertions;
 using Common;
 
 /// <summary>
@@ -73,6 +74,13 @@ public class NovelEngine : MonoBehaviour
     private CommandExecutor _executor;
     #endregion
 
+    private void Awake()
+    {
+        Assert.IsNotNull(mainText, "NovelEngine: mainText is not assigned!");
+        Assert.IsNotNull(uiManager, "NovelEngine: uiManager is not assigned!");
+        Assert.IsNotNull(characterManager, "NovelEngine: characterManager is not assigned!");
+    }
+
     void Start()
     {
         _parser = new ScenarioParser();
@@ -80,28 +88,29 @@ public class NovelEngine : MonoBehaviour
         Init();
     }
 
+    /// <summary>
+    /// シナリオの初期化と再生開始を行う
+    /// </summary>
     private void Init()
     {
         string text = LoadTextFile(textFile);
 
-        mainText.text = "";
-        subText.text = "";
-        nameText.text = "";
-        affiliationText.text = "";
-        titleText.text = "";
+        // 基本UIの初期化
+        mainText.text = string.Empty;
+        subText.text = string.Empty;
+        nameText.text = string.Empty;
+        affiliationText.text = string.Empty;
+        titleText.text = string.Empty;
 
+        // ラベル辞書の解析
         labelDict = _parser.ParseLabelDictionary(text);
 
-        if (labelDict.TryGetValue("start", out string firstText))
+        // 開始位置の決定 (定数を使用)
+        if (labelDict.TryGetValue(GameConstants.ScenarioLabels.Start, out string firstText))
         {
             _pageQueue = _parser.ParsePages(firstText);
         }
-        else
-        {
-             // "start" ラベルがない場合のフェイルセーフ（必要なら最初の行から開始するロジックをここに書く）
-             // 現状は何もせず待機
-        }
-
+        
         StartCoroutine(RunScenarioLoop());
     }
 
@@ -110,12 +119,15 @@ public class NovelEngine : MonoBehaviour
         TextAsset textAsset = Resources.Load<TextAsset>(fname);
         if (textAsset == null)
         {
-            Debug.LogError($"Scenario file '{fname}' not found in Resources.");
-            return "";
+            Debug.LogError($"Scenario file '{fname}' not found in Resources folder.");
+            return string.Empty;
         }
         return textAsset.text.Replace("\r\n", "\n").Replace("\r", "\n");
     }
 
+    /// <summary>
+    /// メインシナリオループ：ページを一つずつ取り出して実行・表示する
+    /// </summary>
     private IEnumerator RunScenarioLoop()
     {
         while (true)
@@ -131,16 +143,16 @@ public class NovelEngine : MonoBehaviour
             if (nextIcon != null) nextIcon.SetActive(false);
 
             Page page = _pageQueue.Dequeue();
+            
             if (page.commands.Count > 0)
             {
                 _executor.Execute(page.commands);
                 continue;
             }
 
-            // メインテキストとサブテキスト（アウトライン）の表示切り替え
             nameText.text = page.name;
-            mainText.text = "";
-            subText.text = "";
+            mainText.text = string.Empty;
+            subText.text = string.Empty;
 
             currentOutputText.text = page.text;
             currentOutputText.maxVisibleCharacters = 0;
@@ -150,13 +162,13 @@ public class NovelEngine : MonoBehaviour
             if (logManager != null)
                 logManager.AddLog(page.name, page.text);
 
-            // クリック待ち（_readyForNextPageがtrueになるまで待機）
             yield return new WaitUntil(() => _readyForNextPage);
             _readyForNextPage = false;
         }
     }
 
     private bool _readyForNextPage = false;
+
     /// <summary>
     /// 指定時間待機するコルーチン（isDelayingフラグを操作）
     /// </summary>
@@ -168,13 +180,14 @@ public class NovelEngine : MonoBehaviour
     }
 
     /// <summary>
-    /// 画面クリック時の処理（テキスト送り、スキップなど）
+    /// 画面クリック時の処理（テキスト送り、ページ送り、スキップ）
     /// </summary>
     public void OnClick()
     {
         if (isDelaying) return;
 
         if (nextIcon != null) nextIcon.SetActive(false);
+        
         if (currentOutputText.maxVisibleCharacters < currentOutputText.text.Length)
         {
             if (_showCharsCoroutine != null)
@@ -205,6 +218,7 @@ public class NovelEngine : MonoBehaviour
     /// <summary>
     /// 指定したラベルのページへジャンプする
     /// </summary>
+    /// <param name="labelName">ジャンプ先ラベル名</param>
     public void GoToLabel(string labelName)
     {
         if (labelDict.TryGetValue(labelName, out string text))
@@ -214,16 +228,16 @@ public class NovelEngine : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"Label '{labelName}' not found.");
+            Debug.LogError($"Label '{labelName}' not found in scenario.");
         }
     }
 
     /// <summary>
-    /// スキップボタン押下時の処理（endラベルへ飛ぶ）
+    /// スキップボタン押下時の処理（endラベルへ強制遷移）
     /// </summary>
     public void SkipButton()
     {
-        GoToLabel("end");
+        GoToLabel(GameConstants.ScenarioLabels.End);
         _readyForNextPage = true;
     }
 
@@ -246,51 +260,25 @@ public class NovelEngine : MonoBehaviour
     }
 
     /// <summary>
-    /// タイトル演出を表示する
+    /// タイトル演出（タイトルロゴ、フェード等）を表示する
     /// </summary>
     public void ShowTitleSequence(string sceneName)
     {
         titleText.text = sceneName;
-        FadeInAll();
-        StartCoroutine(DelayRoutine(3));
-        StartCoroutine(TitleDelay());
+        if (uiManager != null)
+        {
+            uiManager.FadeInTitleUI();
+            StartCoroutine(DelayRoutine(GameConstants.UI.TitleStayDuration));
+            StartCoroutine(TitleDelay());
+        }
     }
 
     private IEnumerator TitleDelay()
     {
-        yield return new WaitForSeconds(2f);
-        FadeOutAll();
-    }
-
-    [Header("Title UI")]
-    public List<GameObject> uiItems;
-    public float fadeDuration = 0.5f;
-
-    /// <summary>
-    /// タイトルUIをフェードアウトして非表示にする
-    /// </summary>
-    public void FadeOutAll()
-    {
-        foreach (var item in uiItems)
+        yield return new WaitForSeconds(2f); 
+        if (uiManager != null)
         {
-            CanvasGroup cg = item.GetComponent<CanvasGroup>();
-            if (cg == null) cg = item.AddComponent<CanvasGroup>();
-            cg.DOFade(0f, fadeDuration).OnComplete(() => item.SetActive(false));
-        }
-    }
-
-    /// <summary>
-    /// タイトルUIを表示し、フェードインさせる
-    /// </summary>
-    public void FadeInAll()
-    {
-        foreach (var item in uiItems)
-        {
-            CanvasGroup cg = item.GetComponent<CanvasGroup>();
-            if (cg == null) cg = item.AddComponent<CanvasGroup>();
-            item.SetActive(true);
-            cg.alpha = 0f;
-            cg.DOFade(1f, fadeDuration);
+            uiManager.FadeOutTitleUI();
         }
     }
 }

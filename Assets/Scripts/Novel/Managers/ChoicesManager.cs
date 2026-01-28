@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using Novel.Data;
+using UnityEngine.Assertions;
 
 /// <summary>
 /// ノベルシーンの選択肢ボタンを管理
@@ -15,7 +16,16 @@ public class ChoicesManager : MonoBehaviour
     [SerializeField] private GameObject overlay;
     [SerializeField] private LogManager logManager;
     [SerializeField] private NovelEngine novelEngine;
-    private bool isChoiceActive = false;
+
+    private bool _isChoiceActive = false;
+
+    private void Awake()
+    {
+        Assert.IsNotNull(parent, "ChoicesManager: Parent transform is missing.");
+        Assert.IsNotNull(choiceButtonPrefab, "ChoicesManager: Button Prefab is missing.");
+        Assert.IsNotNull(novelEngine, "ChoicesManager: NovelEngine reference is missing.");
+    }
+
     /// <summary>
     /// 選択肢ボタンを生成し、ユーザーの入力を待機するコルーチン
     /// </summary>
@@ -23,23 +33,15 @@ public class ChoicesManager : MonoBehaviour
     {
         DestroyButtons();
 
-        if (overlay != null)
-            overlay.SetActive(true);
-
-        isChoiceActive = true;
+        if (overlay != null) overlay.SetActive(true);
+        _isChoiceActive = true;
 
         List<Button> buttons = new List<Button>();
-
-        if (choiceButtonPrefab == null)
-        {
-            Debug.LogError("ChoiceButtonPrefab is not assigned in Inspector!");
-            yield break;
-        }
-
+        
         foreach (var kv in cmd.parameters)
         {
+            // "表示名^移動先ラベル" の形式
             string val = kv.Value;
-            // "表示名^移動先ラベル" の形式（ノベルスクリプトの仕様）
             string[] parts = val.Split('^');
             if (parts.Length != 2) continue;
 
@@ -49,42 +51,49 @@ public class ChoicesManager : MonoBehaviour
             GameObject go = Instantiate(choiceButtonPrefab, parent);
             Button btn = go.GetComponent<Button>();
             TextMeshProUGUI tmp = go.GetComponentInChildren<TextMeshProUGUI>();
-            tmp.text = buttonText;
+            
+            if (tmp != null) tmp.text = buttonText;
 
             btn.interactable = false;
             buttons.Add(btn);
 
             btn.onClick.AddListener(() =>
             {
-                if (overlay != null)
-                    overlay.SetActive(false);
+                if (overlay != null) overlay.SetActive(false);
 
-                string msg = $"あなたは「{buttonText}」を選んだ。";
+                // 選択ログ
                 if (logManager != null)
-                    logManager.AddLog("選択", msg);
+                {
+                    logManager.AddLog("選択", $"あなたは「{buttonText}」を選んだ。");
+                }
 
-                isChoiceActive = false;
+                _isChoiceActive = false;
                 onChoiceSelected?.Invoke(labelName);
                 DestroyButtons();
                 novelEngine.OnClick();
             });
         }
 
+        // 即座に押せないように少し待つ
         yield return new WaitForSeconds(0.5f);
         foreach (var btn in buttons)
-            btn.interactable = true;
+        {
+            if (btn != null) btn.interactable = true;
+        }
 
-        while (isChoiceActive)
+        while (_isChoiceActive)
+        {
             yield return null;
+        }
 
-        if (overlay != null)
-            overlay.SetActive(false);
+        if (overlay != null) overlay.SetActive(false);
     }
-
 
     private void DestroyButtons()
     {
         foreach (Transform child in parent)
+        {
             Destroy(child.gameObject);
+        }
     }
 }

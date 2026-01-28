@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
+using UnityEngine.Assertions;
 using Common;
 
 /// <summary>
@@ -11,12 +11,13 @@ public class PartyManager : MonoBehaviour
 {
     public static PartyManager Instance { get; private set; }
 
-    [SerializeField] public int maxPartySize = 4;
+    [SerializeField] private int maxPartySize = 4;
     private int[] _partyMemberIds;
 
+    public int MaxPartySize => maxPartySize;
     public IReadOnlyList<int> PartyMemberIds => _partyMemberIds;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -25,17 +26,17 @@ public class PartyManager : MonoBehaviour
         }
         Instance = this;
 
-        // ロード完了前のアクセスエラーを防ぐために初期化
         _partyMemberIds = new int[maxPartySize];
         for (int i = 0; i < maxPartySize; i++) _partyMemberIds[i] = -1;
 
-        // DontDestroyOnLoadはルートオブジェクトにしか効かないため、親から分離する
         transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
+        
+        Assert.IsTrue(maxPartySize > 0, "PartyManager: Max Party Size must be greater than 0");
     }
 
     /// <summary>
-    /// 初期化コルーチン。データのロードを行う。
+    /// 初期化コルーチン
     /// </summary>
     public IEnumerator InitializeCoroutine()
     {
@@ -44,7 +45,7 @@ public class PartyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 指定スロットにキャラクターをセットし、保存する。
+    /// 指定スロットにキャラクターをセットし、保存する
     /// </summary>
     /// <param name="slotIndex">スロット番号</param>
     /// <param name="characterId">キャラクターID</param>
@@ -52,7 +53,6 @@ public class PartyManager : MonoBehaviour
     {
         if (slotIndex < 0 || slotIndex >= _partyMemberIds.Length) return;
 
-        // 重複防止：他のスロットに同じキャラがいたらクリア
         for (int i = 0; i < _partyMemberIds.Length; i++)
         {
             if (_partyMemberIds[i] == characterId) _partyMemberIds[i] = -1;
@@ -63,12 +63,13 @@ public class PartyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 現在のパーティ構成をPlayerPrefsに保存する。
+    /// 現在のパーティ構成を保存する
     /// </summary>
     public void SaveParty()
     {
         string saveString = string.Join(",", _partyMemberIds);
         PlayerPrefs.SetString(GameConstants.Prefs.PlayerParty, saveString);
+        PlayerPrefs.Save();
     }
 
     private void LoadParty()
@@ -79,7 +80,7 @@ public class PartyManager : MonoBehaviour
             for (int i = 0; i < maxPartySize; i++) _partyMemberIds[i] = -1;
         }
 
-        string saved = PlayerPrefs.GetString(GameConstants.Prefs.PlayerParty, "");
+        string saved = PlayerPrefs.GetString(GameConstants.Prefs.PlayerParty, string.Empty);
         if (!string.IsNullOrEmpty(saved))
         {
             string[] split = saved.Split(',');

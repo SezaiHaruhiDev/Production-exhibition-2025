@@ -1,56 +1,59 @@
 using UnityEngine;
 using Novel.Data;
-using UnityEngine.Serialization;
-using System.Collections;
 
 /// <summary>
-/// ノベルシーンのBGM再生を管理（フェードイン/アウト対応）
+/// ノベルシーンのBGM再生を管理
 /// </summary>
 public class BGMManager : MonoBehaviour
 {
-    void Start()
-    {
-    }
+    private const string KeyNew = "new";
+    private const string KeyPlayState = "p";
+    private const string KeyChange = "chan";
+    private const string KeyVolume = "vol";
+
+    private const int StateStop = 0;
+    private const int StateResume = 1;
+    private const int StatePause = 2;
+    private const int StateUnpause = 3;
 
     /// <summary>
-    /// ノベルスクリプトからのコマンド（bgm, seなど）を処理し、SoundManagerに命令を送る
+    /// コマンドパラメータを解析してBGM操作を実行
     /// </summary>
     public void ProcessCommand(Command cmd)
     {
-        if (cmd.parameters.TryGetValue("new", out string bgmstr))
+        if (cmd.parameters.TryGetValue(KeyNew, out string bgmName))
         {
-            SoundManager.Instance.PlayBGM(bgmstr);
+            SoundManager.Instance.PlayBGM(bgmName);
         }
 
-        // "p": Play/Pause State (0: Stop, 1: Resume)
-        if (cmd.parameters.TryGetValue("p", out string pstr))
+        if (cmd.parameters.TryGetValue(KeyPlayState, out string stateStr) && int.TryParse(stateStr, out int state))
         {
-            if (int.TryParse(pstr, out int pint))
+            switch (state)
             {
-                if (pint == 0)
+                case StateStop:
                     SoundManager.Instance.StopBGM();
-                if (pint == 1)
+                    break;
+                case StateResume:
                     SoundManager.Instance.ResumeBGM();
-                if (pint == 2)
+                    break;
+                case StatePause:
                     SoundManager.Instance.PauseBGM();
-                if (pint == 3)
+                    break;
+                case StateUnpause:
                     SoundManager.Instance.UnpauseBGM();
+                    break;
             }
         }
 
-        // "chan": Change BGM Track
-        if (cmd.parameters.TryGetValue("chan", out string cbgmstr))
+        if (cmd.parameters.TryGetValue(KeyChange, out string changeName))
         {
-            SoundManager.Instance.PlayBGM(cbgmstr);
+            SoundManager.Instance.PlayBGM(changeName);
         }
 
-        if (cmd.parameters.TryGetValue("vol", out string volstr))
+        if (cmd.parameters.TryGetValue(KeyVolume, out string volStr) && int.TryParse(volStr, out int volume))
         {
-            if (int.TryParse(volstr, out int volint))
-            {
-                float volflo = Mathf.Clamp01(volint / 100f);
-                SoundManager.Instance.SetBGMVolume(volflo);
-            }
+            float volumeNormalized = Mathf.Clamp01(volume / 100f);
+            SoundManager.Instance.SetBGMVolume(volumeNormalized);
         }
     }
 }

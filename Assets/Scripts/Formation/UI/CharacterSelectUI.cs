@@ -2,32 +2,45 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using UnityEngine.UI;
-using System.Collections;
 using UnityEngine.Serialization;
+using UnityEngine.Assertions;
 
 /// <summary>
 /// パーティ編成画面のキャラクター選択UIを管理
 /// </summary>
 public class CharacterSelectUI : MonoBehaviour
 {
+    private const string NullButtonName = "NullButton";
+    private const string FrameInSlot = "InSlotFrame";
+    private const string FrameTempSelect = "TempSelectFrame";
+    private const int NullCharacterId = -1;
+
     [SerializeField] private CharacterRegistrySO registry;
     [SerializeField] private GameObject buttonPrefab;
     [SerializeField] private Transform contentParent;
-    [SerializeField] private Image SelectedCharacterImage;
+    [SerializeField] private Image selectedCharacterImage;
 
     [FormerlySerializedAs("SelectPannel")]
-    [SerializeField] private GameObject SelectPanel;
+    [SerializeField] private GameObject selectPanel;
     [SerializeField] private Button[] partySlotButtons;
     [SerializeField] private Image[] partySlotImages;
     [SerializeField] private Sprite emptySlotSprite;
     [SerializeField] private Sprite emptySlotBigSprite;
 
-    public int IsSelected = -1;
-    private int tempSelectedCharacterId = -1;
-    public List<int> IsOwnedCharacterID = new List<int>();
+    public int CurrentSlotIndex { get; private set; } = -1;
+
+    private int _tempSelectedCharacterId = -1;
     private Dictionary<int, GameObject> _inSlotHighlightDict = new Dictionary<int, GameObject>();
     private Dictionary<int, GameObject> _tempSelectHighlightDict = new Dictionary<int, GameObject>();
     private Dictionary<int, Image> _buttonImageDict = new Dictionary<int, Image>();
+
+    private void Awake()
+    {
+        Assert.IsNotNull(registry, "CharacterSelectUI: Registry is not assigned!");
+        Assert.IsNotNull(buttonPrefab, "CharacterSelectUI: Button Prefab is not assigned!");
+        Assert.IsNotNull(contentParent, "CharacterSelectUI: Content Parent is not assigned!");
+        Assert.IsNotNull(selectPanel, "CharacterSelectUI: Select Panel is not assigned!");
+    }
 
     private void Start()
     {
@@ -37,87 +50,66 @@ public class CharacterSelectUI : MonoBehaviour
             partySlotButtons[i].onClick.AddListener(() => OnPartySlotClicked(index));
         }
 
-        if (registry == null)
-        {
-            Debug.LogError("CharacterSelectUI: Registry is not assigned!");
-            return;
-        }
-
-        // 味方のうち、所持しているキャラのIDリストを作成
         var ownedIds = registry.AllyCharacters
             .Where(c => SaveDataManager.Instance.GetCharacter(c.id).IsOwned)
             .Select(c => c.id)
             .ToList();
 
-        // Null解除ボタン（パーティから外す用）
-        GameObject nullbutton = Instantiate(buttonPrefab, contentParent);
-        nullbutton.name = "NullButton";
-        Button nbtn = nullbutton.GetComponent<Button>();
-        Image nbtnimg = nullbutton.GetComponent<Image>();
-        if (nbtnimg != null)
-        {
-            nbtnimg.sprite = emptySlotSprite;
-            _buttonImageDict[-1] = nbtnimg;
-        }
-        nbtn.onClick.AddListener(() => OnSelectCharacter(-1));
-
-        // Nullボタンのハイライト枠を登録（現在スロットが空であることを示すハイライトなど）
-        Transform nInSlot = nullbutton.transform.Find("InSlotFrame");
-        if (nInSlot != null) _inSlotHighlightDict[-1] = nInSlot.gameObject;
-
-        Transform nTempSelect = nullbutton.transform.Find("TempSelectFrame");
-        if (nTempSelect != null) _tempSelectHighlightDict[-1] = nTempSelect.gameObject;
+        CreateCharacterButton(NullCharacterId, emptySlotSprite);
 
         foreach (int charID in ownedIds)
         {
-            int cid = charID;
-            GameObject buttonObj = Instantiate(buttonPrefab, contentParent);
-            buttonObj.name = "Character ID " + cid;
-
-            var masterSo = registry.GetById(cid);
+            var masterSo = registry.GetById(charID);
             if (masterSo != null)
             {
-                Image btnimg = buttonObj.GetComponent<Image>();
-                if (btnimg != null)
-                {
-                    btnimg.sprite = masterSo.characterMiniSprite;
-                    _buttonImageDict[cid] = btnimg;
-                }
-
-                Button btn = buttonObj.GetComponent<Button>();
-                if (btn != null) btn.onClick.AddListener(() => OnSelectCharacter(cid));
-
-                Transform inSlot = buttonObj.transform.Find("InSlotFrame");
-                if (inSlot != null) _inSlotHighlightDict[cid] = inSlot.gameObject;
-
-                Transform tempSelect = buttonObj.transform.Find("TempSelectFrame");
-                if (tempSelect != null) _tempSelectHighlightDict[cid] = tempSelect.gameObject;
+                CreateCharacterButton(charID, masterSo.characterMiniSprite);
             }
         }
 
-        // 動的なボタン追加後にGrid Layout Groupなどの計算を即座に確定させる
         LayoutRebuilder.ForceRebuildLayoutImmediate(contentParent.GetComponent<RectTransform>());
         CharacterImageRefresh();
     }
 
+    private void CreateCharacterButton(int charID, Sprite sprite)
+    {
+        GameObject buttonObj = Instantiate(buttonPrefab, contentParent);
+        buttonObj.name = charID == NullCharacterId ? NullButtonName : $"Character ID {charID}";
+
+        Image btnImg = buttonObj.GetComponent<Image>();
+        if (btnImg != null)
+        {
+            btnImg.sprite = sprite;
+            _buttonImageDict[charID] = btnImg;
+        }
+
+        Button btn = buttonObj.GetComponent<Button>();
+        if (btn != null) btn.onClick.AddListener(() => OnSelectCharacter(charID));
+
+        Transform inSlot = buttonObj.transform.Find(FrameInSlot);
+        if (inSlot != null) _inSlotHighlightDict[charID] = inSlot.gameObject;
+
+        Transform tempSelect = buttonObj.transform.Find(FrameTempSelect);
+        if (tempSelect != null) _tempSelectHighlightDict[charID] = tempSelect.gameObject;
+    }
+
     /// <summary>
-    /// キャラクター選択処理。リストからキャラを選ぶ、または選択解除する。
+    /// キャラクター選択処理
     /// </summary>
     /// <param name="id">キャラクターID（-1で解除）</param>
     public void OnSelectCharacter(int id)
     {
-        if (id == -1)
+        if (id == NullCharacterId)
         {
-            if (SelectedCharacterImage != null) SelectedCharacterImage.sprite = emptySlotBigSprite;
-            tempSelectedCharacterId = -1;
+            if (selectedCharacterImage != null) selectedCharacterImage.sprite = emptySlotBigSprite;
+            _tempSelectedCharacterId = NullCharacterId;
         }
         else
         {
             var masterSo = registry.GetById(id);
             if (masterSo != null)
             {
-                if (SelectedCharacterImage != null) SelectedCharacterImage.sprite = masterSo.characterBigSprite;
-                tempSelectedCharacterId = id;
+                if (selectedCharacterImage != null) selectedCharacterImage.sprite = masterSo.characterBigSprite;
+                _tempSelectedCharacterId = id;
             }
         }
 
@@ -125,64 +117,60 @@ public class CharacterSelectUI : MonoBehaviour
     }
 
     /// <summary>
-    /// OKボタン押下時。選択中のキャラを現在の編成スロットに確定する。
+    /// OKボタン押下時
     /// </summary>
     public void OnOkClick()
     {
-        if (IsSelected >= 0 && IsSelected < PartyManager.Instance.maxPartySize)
+        if (CurrentSlotIndex >= 0 && CurrentSlotIndex < PartyManager.Instance.MaxPartySize)
         {
-            PartyManager.Instance.SetMember(IsSelected, tempSelectedCharacterId);
-        }
-        else
-        {
-            Debug.LogWarning("選択が無効です");
+            PartyManager.Instance.SetMember(CurrentSlotIndex, _tempSelectedCharacterId);
         }
 
-        if (SelectedCharacterImage != null) SelectedCharacterImage.sprite = null;
-        tempSelectedCharacterId = -1;
+        if (selectedCharacterImage != null) selectedCharacterImage.sprite = null;
+        _tempSelectedCharacterId = NullCharacterId;
 
-        if (SelectPanel != null) SelectPanel.SetActive(false);
+        if (selectPanel != null) selectPanel.SetActive(false);
         CharacterImageRefresh();
     }
 
     /// <summary>
-    /// キャンセルボタン押下時。仮選択状態を解除する。
+    /// キャンセルボタン押下時
     /// </summary>
     public void CancelCkick()
     {
-        tempSelectedCharacterId = -1;
-        if (SelectPanel != null) SelectPanel.SetActive(false);
+        _tempSelectedCharacterId = NullCharacterId;
+        if (selectPanel != null) selectPanel.SetActive(false);
         CharacterImageRefresh();
         RefreshListHighlights();
     }
 
     /// <summary>
-    /// パーティスロット（編成枠）クリック時。枠を選択状態にし、現在のキャラを表示する。
+    /// パーティスロットクリック時
     /// </summary>
     /// <param name="index">スロット番号</param>
     public void OnPartySlotClicked(int index)
     {
-        IsSelected = index;
+        CurrentSlotIndex = index;
         int currentCharId = PartyManager.Instance.PartyMemberIds[index];
 
         var masterSo = registry.GetById(currentCharId);
         if (masterSo != null)
         {
-            if (SelectedCharacterImage != null) SelectedCharacterImage.sprite = masterSo.characterBigSprite;
-            tempSelectedCharacterId = currentCharId;
+            if (selectedCharacterImage != null) selectedCharacterImage.sprite = masterSo.characterBigSprite;
+            _tempSelectedCharacterId = currentCharId;
         }
         else
         {
-            if (SelectedCharacterImage != null) SelectedCharacterImage.sprite = emptySlotBigSprite;
-            tempSelectedCharacterId = -1;
+            if (selectedCharacterImage != null) selectedCharacterImage.sprite = emptySlotBigSprite;
+            _tempSelectedCharacterId = NullCharacterId;
         }
 
-        if (SelectPanel != null) SelectPanel.SetActive(true);
+        if (selectPanel != null) selectPanel.SetActive(true);
         RefreshListHighlights();
     }
 
     /// <summary>
-    /// パーティスロットの画像を最新の状態に更新する。
+    /// パーティスロット画像の更新
     /// </summary>
     public void CharacterImageRefresh()
     {
@@ -206,8 +194,7 @@ public class CharacterSelectUI : MonoBehaviour
         {
             if (kvp.Value != null)
             {
-                // すでにパーティ（いずれかのスロット）に入っているキャラを暗くするなどの強調表示
-                bool isInParty = kvp.Key != -1 && partyMemberIds.Contains(kvp.Key);
+                bool isInParty = kvp.Key != NullCharacterId && partyMemberIds.Contains(kvp.Key);
                 kvp.Value.SetActive(isInParty);
             }
         }
@@ -216,8 +203,7 @@ public class CharacterSelectUI : MonoBehaviour
         {
             if (kvp.Value != null)
             {
-                // 現在「クリックして詳細表示中」のキャラを枠で囲むなどの強調表示
-                kvp.Value.SetActive(kvp.Key == tempSelectedCharacterId);
+                kvp.Value.SetActive(kvp.Key == _tempSelectedCharacterId);
             }
         }
     }

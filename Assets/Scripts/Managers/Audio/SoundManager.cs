@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 /// <summary>
-/// サウンドエフェクト（SE）の再生を管理
+/// サウンド管理（BGM/SE）
 /// </summary>
 public class SoundManager : MonoBehaviour
 {
@@ -13,7 +13,7 @@ public class SoundManager : MonoBehaviour
         {
             if (_instance == null)
             {
-                GameObject go = new GameObject("SoundManager");
+                var go = new GameObject("SoundManager");
                 _instance = go.AddComponent<SoundManager>();
                 DontDestroyOnLoad(go);
             }
@@ -23,6 +23,9 @@ public class SoundManager : MonoBehaviour
 
     private AudioSource _seSource;
     private AudioSource _bgmSource;
+
+    private const string PathSE = "se/";
+    private const string PathBGM = "bgm/";
 
     private void Awake()
     {
@@ -38,48 +41,47 @@ public class SoundManager : MonoBehaviour
             return;
         }
 
-        _seSource = gameObject.AddComponent<AudioSource>();
-        _bgmSource = gameObject.AddComponent<AudioSource>();
-        _bgmSource.loop = true;
-        _bgmSource.playOnAwake = false;
+        SetupAudioSources();
     }
 
-    /// <summary>
-    /// 初期化処理（BootManagerから呼び出す・コルーチン対応）
-    /// </summary>
-    public IEnumerator InitializeCoroutine()
+    private void SetupAudioSources()
     {
-        // 明示的にインスタンス化・初期設定を行いたい場合に呼び出す
-        // 現状はAwakeで処理が完結しているため重い処理はないが、
-        // 将来的に設定ロード（非同期）などが入っても良いようにコルーチン化しておく
-        if (_seSource == null || _bgmSource == null)
+        if (_seSource == null) _seSource = gameObject.AddComponent<AudioSource>();
+        if (_bgmSource == null)
         {
-            _seSource = gameObject.AddComponent<AudioSource>();
             _bgmSource = gameObject.AddComponent<AudioSource>();
             _bgmSource.loop = true;
             _bgmSource.playOnAwake = false;
         }
+    }
+
+    /// <summary>
+    /// 初期化コルーチン
+    /// </summary>
+    public IEnumerator InitializeCoroutine()
+    {
+        SetupAudioSources();
         yield break;
     }
 
     /// <summary>
-    /// Resources/SE フォルダ内のファイル名を指定してSEを再生
+    /// SE再生 (Resources/SE)
     /// </summary>
     public void PlaySE(string seName, float volume = 1f)
     {
-        AudioClip clip = Resources.Load<AudioClip>("se/" + seName);
+        var clip = Resources.Load<AudioClip>(PathSE + seName);
         if (clip != null)
         {
             _seSource.PlayOneShot(clip, volume);
         }
         else
         {
-            Debug.LogWarning($"SE '{seName}' not found in Resources/SE/");
+            Debug.LogWarning($"SoundManager: SE '{seName}' not found.");
         }
     }
 
     /// <summary>
-    /// AudioClipを直接指定してSEを再生
+    /// SE再生 (Clip直接指定)
     /// </summary>
     public void PlaySE(AudioClip clip, float volume = 1f)
     {
@@ -88,19 +90,17 @@ public class SoundManager : MonoBehaviour
     }
 
     /// <summary>
-    /// BGMを再生（Resources/bgm/ 以下）
-    /// transitionTime > 0 の場合はフェードイン/クロスフェードを行う
+    /// BGM再生
     /// </summary>
     public void PlayBGM(string bgmName, float volume = 1f, float transitionTime = 0.5f)
     {
-        AudioClip clip = Resources.Load<AudioClip>("bgm/" + bgmName);
+        var clip = Resources.Load<AudioClip>(PathBGM + bgmName);
         if (clip == null)
         {
-            Debug.LogError($"BGM '{bgmName}' not found in Resources/bgm/");
+            Debug.LogError($"SoundManager: BGM '{bgmName}' not found.");
             return;
         }
 
-        // すでに同じ曲が流れている場合は音量だけ調整（必要なら）して終了
         if (_bgmSource.clip == clip && _bgmSource.isPlaying)
         {
             StartCoroutine(FadeVolume(volume, transitionTime));
@@ -110,17 +110,11 @@ public class SoundManager : MonoBehaviour
         StartCoroutine(PlayBGMCoroutine(clip, volume, transitionTime));
     }
 
-    /// <summary>
-    /// BGMを停止（フェードアウト）
-    /// </summary>
     public void StopBGM(float fadeTime = 0.5f)
     {
         StartCoroutine(StopBGMCoroutine(fadeTime));
     }
 
-    /// <summary>
-    /// 停止中のBGMをフェードインして再開（最初から再生）
-    /// </summary>
     public void ResumeBGM(float fadeTime = 0.5f)
     {
         if (_bgmSource.clip != null && !_bgmSource.isPlaying)
@@ -131,25 +125,16 @@ public class SoundManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// BGMの音量を変更（フェード）
-    /// </summary>
     public void SetBGMVolume(float targetVolume, float fadeTime = 0.5f)
     {
         StartCoroutine(FadeVolume(targetVolume, fadeTime));
     }
 
-    /// <summary>
-    /// BGMを一時停止する（位置を保持）
-    /// </summary>
     public void PauseBGM(float fadeTime = 0.5f)
     {
         StartCoroutine(PauseBGMCoroutine(fadeTime));
     }
 
-    /// <summary>
-    /// 一時停止中のBGMを再開する（現在の位置から）
-    /// </summary>
     public void UnpauseBGM(float fadeTime = 0.5f)
     {
         StartCoroutine(UnpauseBGMCoroutine(fadeTime));
@@ -157,7 +142,6 @@ public class SoundManager : MonoBehaviour
 
     private IEnumerator PlayBGMCoroutine(AudioClip newClip, float targetVolume, float fadeTime)
     {
-        // 何か流れていたらフェードアウト
         if (_bgmSource.isPlaying)
         {
             yield return StartCoroutine(FadeVolume(0f, fadeTime));
@@ -168,7 +152,6 @@ public class SoundManager : MonoBehaviour
         _bgmSource.volume = 0f;
         _bgmSource.Play();
 
-        // フェードイン
         yield return StartCoroutine(FadeVolume(targetVolume, fadeTime));
     }
 

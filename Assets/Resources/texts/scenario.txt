@@ -7,6 +7,7 @@
 &!out=sub:true
 &!bgm=new:theater_1
 &!bgm=vol:50
+&!font=size:45
 &!se=sep:walk
 &!cl=value:1
 &「」
@@ -88,7 +89,7 @@
 &!fc=offset:500
 &!fc=name:あなた
 &!color=r:255,g:255,b:255
-&!font=size:50
+&!font=size:45
 &!speed=value:0.07
 &!cr=name:あなた,sprite:robin_w_astonishment
 &!crs=name:あなた,col:255^255^255^255
@@ -189,7 +190,7 @@
 
 &!fc=reset
 &!fc=offset:500
-&!font=size:50
+&!font=size:45
 &!fc=zoom:reset
 
 &占い師「この街で“最も選ぶに値する店”を、教えて差し上げよう。」
@@ -277,7 +278,7 @@
 &!font=size:80
 &!cr=name:あなた,show:0
 &!bg=sprite:black_bg
-&!font=size:50
+&!font=size:45
 &!speed=value:0.07
 
 &「」

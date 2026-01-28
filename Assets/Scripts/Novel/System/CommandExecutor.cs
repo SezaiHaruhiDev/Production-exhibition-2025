@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine.UI;
 using Novel.Data;
+using Common;
 
 namespace Novel.System
 {
@@ -34,71 +34,71 @@ namespace Novel.System
         {
             switch (cmd.type)
             {
-                case "bg":
+                case GameConstants.NovelCommands.Types.Background:
                     ChangeBackground(cmd);
                     break;
-                case "ncr": // Create Character (New Character)
+                case GameConstants.NovelCommands.Types.NewCharacter:
                     _manager.CharacterManager.CreateCharacter(cmd);
                     break;
-                case "crs":
+                case GameConstants.NovelCommands.Types.ChangeCharacterSize:
                     _manager.CharacterManager.ChangeCharacterSize(cmd);
                     break;
-                case "cr":
+                case GameConstants.NovelCommands.Types.ChangeCharacter:
                     _manager.CharacterManager.ChangeCharacter(cmd);
                     break;
-                case "ch":
+                case GameConstants.NovelCommands.Types.Choice:
                     _manager.StartCoroutine(_manager.ChoicesManager.ChoiceButton(cmd, (label) =>
                     {
                         _manager.GoToLabel(label);
                     }));
                     break;
-                case "bgm":
+                case GameConstants.NovelCommands.Types.BGM:
                     _manager.BgmManager.ProcessCommand(cmd);
                     break;
-                case "se":
+                case GameConstants.NovelCommands.Types.SE:
                     _manager.SeManager.ProcessCommand(cmd);
                     break;
-                case "af": // Affiliation (所属テキスト表示)
+                case GameConstants.NovelCommands.Types.Affiliation:
                     ShowAffiliation(cmd);
                     break;
-                case "ui":
+                case GameConstants.NovelCommands.Types.UI:
                     _manager.UiManager.UIChange(cmd);
                     break;
-                case "out": // Outline / Sub-text flag
+                case GameConstants.NovelCommands.Types.Outline:
                     SetSubTextFlag(cmd);
                     break;
-                case "fc":
+                case GameConstants.NovelCommands.Types.FocusCamera:
                     ControlCamera(cmd);
                     break;
-                case "wait":
+                case GameConstants.NovelCommands.Types.Wait:
                     Wait(cmd);
                     break;
-                case "speed":
+                case GameConstants.NovelCommands.Types.Speed:
                     ChangeSpeed(cmd);
                     break;
-                case "font":
+                case GameConstants.NovelCommands.Types.Font:
                     ChangeFontSize(cmd);
                     break;
-                case "color":
+                case GameConstants.NovelCommands.Types.Color:
                     ChangeFontColor(cmd);
                     break;
-                case "tb": // Toggle Background Image State (Image A/B)
+                case GameConstants.NovelCommands.Types.ToggleBackground:
                     SwitchImageState(cmd);
                     break;
-                case "cl":
+                case GameConstants.NovelCommands.Types.Click:
                     AutoClick(cmd);
                     break;
-                case "shake":
+                case GameConstants.NovelCommands.Types.Shake:
                     _manager.CameraFocusManager.Camera(cmd);
                     break;
-                case "skip":
+                case GameConstants.NovelCommands.Types.Skip:
                     SkipToLabel(cmd);
                     break;
-                case "title":
+                case GameConstants.NovelCommands.Types.Title:
                     ShowTitle(cmd);
                     break;
                 default:
-                    Debug.LogWarning($"Unknown command: {cmd.type}");
+                    Debug.LogWarning($"CommandExecutor: Unknown command type '{cmd.type}'");
                     break;
             }
         }

@@ -1,23 +1,24 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using Common;
+using UnityEngine.Assertions;
 
 /// <summary>
 /// ゲーム起動時の初期化処理を管理
 /// </summary>
 public class BootManager : MonoBehaviour
 {
-    IEnumerator Start()
+    private IEnumerator Start()
     {
-        // 依存関係のあるマネージャー群を順番に初期化（コルーチンで待機）
         yield return PartyManager.Instance.InitializeCoroutine();
         yield return LoadManager.Instance.InitializeCoroutine();
         yield return SoundManager.Instance.InitializeCoroutine();
 
-        // 最初のプレイアブルキャラ（ID: 0）を強制的にアンロックして開始する
+        Assert.IsTrue(PartyManager.Instance.PartyMemberIds.Count == PartyManager.Instance.MaxPartySize, 
+            "BootManager: Party size mismatch on boot.");
         SaveDataManager.Instance.UnlockCharacter(0);
-        SceneManager.LoadScene("FormationScene");
+
+        SceneManager.LoadScene(GameConstants.Scenes.Formation);
     }
 }
