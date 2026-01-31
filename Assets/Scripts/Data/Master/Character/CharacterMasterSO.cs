@@ -16,6 +16,8 @@ public abstract class CharacterMasterSO : ScriptableObject
     [FormerlySerializedAs("CharacterBigSprite")]
     public Sprite characterBigSprite;
 
+    public Sprite characterBattleSprite;
+
     public int hp;
     public int mp;
     public int atk;

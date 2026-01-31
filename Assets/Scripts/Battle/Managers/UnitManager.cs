@@ -20,7 +20,8 @@ public class UnitManager : MonoBehaviour
     #endregion
 
     #region Private Fields
-    private Dictionary<int, BattleUnit> _unitMap = new();
+    private Dictionary<int, BattleUnit> allbattleunits = new();
+    public List<BattleUnit> AllUnits => new List<BattleUnit>(allbattleunits.Values);
     private int _nextUnitId = 0;
     private int _currentAllyCount = 0;
     private int _currentEnemyCount = 0;
@@ -69,6 +70,25 @@ public class UnitManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 生成済みのRuntimeCharacterを元にユニットを生成・配置する（レンタルやイベント用）
+    /// </summary>
+    public void AddUnit(RuntimeCharacter character, bool isAlly)
+    {
+        if (registry == null) return;
+
+        CharacterMasterSO master = registry.GetById(character.id);
+        if (master == null)
+        {
+            Debug.LogWarning($"UnitManager: Master Data for ID {character.id} not found.");
+            return;
+        }
+
+        UnitCharacter unitData = new UnitCharacter(character, _nextUnitId);
+
+        SpawnBattleUnit(unitData, master, isAlly);
+    }
+
     private void SpawnBattleUnit(UnitCharacter data, CharacterMasterSO master, bool isAlly)
     {
         Transform[] targetPoints = isAlly ? _allySpawnPoints : _enemySpawnPoints;
@@ -81,10 +101,19 @@ public class UnitManager : MonoBehaviour
         }
 
         Transform spawnPoint = targetPoints[spawnIndex];
-        BattleUnit battleUnit = Instantiate(_battleunitPrefab, spawnPoint.position, spawnPoint.rotation);
-        Sprite sprite = master.characterBigSprite;
+        // 親をspawnPointに設定して生成
+        BattleUnit battleUnit = Instantiate(_battleunitPrefab, spawnPoint);
+        battleUnit.transform.localPosition = Vector3.zero;
+        battleUnit.transform.localRotation = Quaternion.identity;
+        
+        // オブジェクトの名前をキャラクター名にする
+        battleUnit.name = data.name;
+
+        // バトル用のスプライトを優先し、なければBigスプライトをフォールバックとして使う
+        Sprite sprite = master.characterBattleSprite != null ? master.characterBattleSprite : master.characterBigSprite;
+        
         battleUnit.Setup(data, sprite);
-        _unitMap.Add(data.unitId, battleUnit);
+        allbattleunits.Add(data.unitId, battleUnit);
         if (isAlly) _currentAllyCount++; else _currentEnemyCount++;
         _nextUnitId++;
     }

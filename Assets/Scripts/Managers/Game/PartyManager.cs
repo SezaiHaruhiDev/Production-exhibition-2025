@@ -31,7 +31,7 @@ public class PartyManager : MonoBehaviour
 
         transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
-        
+
         Assert.IsTrue(maxPartySize > 0, "PartyManager: Max Party Size must be greater than 0");
     }
 
@@ -60,6 +60,27 @@ public class PartyManager : MonoBehaviour
 
         _partyMemberIds[slotIndex] = characterId;
         SaveParty();
+    }
+
+    /// <summary>
+    /// 現在のパーティメンバーのランタイムデータを取得する
+    /// </summary>
+    public List<RuntimeCharacter> GetPartyCharacters()
+    {
+        List<RuntimeCharacter> characters = new List<RuntimeCharacter>();
+        if (_partyMemberIds == null) return characters;
+
+        foreach (int id in _partyMemberIds)
+        {
+            if (id == -1) continue;
+
+            var runtime = LoadManager.Instance.GetRuntimeCharacter(id);
+            if (runtime != null)
+            {
+                characters.Add(runtime);
+            }
+        }
+        return characters;
     }
 
     /// <summary>

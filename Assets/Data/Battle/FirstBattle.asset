@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: FirstBattle
   m_EditorClassIdentifier: Assembly-CSharp::BattleSO
   battleID: 0
-  partyType: 0
+  partyType: 1
   phases:
   - allEnemy:
     - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
+    - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
+    - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
+    - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
   - allEnemy:
     - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
-  rentalParty: {fileID: 0}
+    - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
+    - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
+    - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
+  rentalParty: {fileID: 11400000, guid: 1d96a3c8f823b487194f41d030c54ee4, type: 2}
+  deckConfig: {fileID: 11400000, guid: 62a239d2983e644d9bcdbd03a1980621, type: 2}

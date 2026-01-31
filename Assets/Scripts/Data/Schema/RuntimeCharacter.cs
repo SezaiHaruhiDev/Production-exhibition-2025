@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// ゲーム実行時のキャラクターデータ（マスターデータ + 成長データの合成結果）
@@ -48,5 +49,40 @@ public class RuntimeCharacter
         skillId = new List<int>();
         if (master.skillId != null) skillId.AddRange(master.skillId);
         if (data.skillId != null) skillId.AddRange(data.skillId);
+    }
+
+    /// <summary>
+    /// レンタルデータからランタイムキャラクターを生成する（マスターデータをベースに指定値で上書き）
+    /// </summary>
+    public RuntimeCharacter(RentalCharacter rental)
+    {
+        if (rental.baseAlly == null) return;
+
+        id = rental.baseAlly.id;
+        name = string.IsNullOrEmpty(rental.name) ? rental.baseAlly.characterName : rental.name;
+        level = rental.level;
+        
+        // ステータスが0でない場合はレンタル側の値を、0の場合はマスター側の値を使用する
+        maxHp = rental.maxHp > 0 ? rental.maxHp : rental.baseAlly.hp;
+        maxMp = rental.maxMp > 0 ? rental.maxMp : rental.baseAlly.mp;
+
+        // 指定された割合(0.0〜1.0)に基づいて現在値を計算
+        currentHp = Mathf.RoundToInt(maxHp * rental.hpRatio);
+        currentMp = Mathf.RoundToInt(maxMp * rental.mpRatio);
+        
+        atk = rental.atk > 0 ? rental.atk : rental.baseAlly.atk;
+        def = rental.def > 0 ? rental.def : rental.baseAlly.def;
+        speed = rental.speed > 0 ? rental.speed : rental.baseAlly.speed;
+        exp = rental.exp;
+
+        skillId = new List<int>();
+        if (rental.skillId != null && rental.skillId.Count > 0)
+        {
+            skillId.AddRange(rental.skillId);
+        }
+        else if (rental.baseAlly.skillId != null)
+        {
+            skillId.AddRange(rental.baseAlly.skillId);
+        }
     }
 }

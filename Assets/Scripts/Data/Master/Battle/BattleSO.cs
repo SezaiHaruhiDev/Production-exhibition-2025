@@ -10,4 +10,5 @@ public class BattleSO : ScriptableObject
     public PartySourceType partyType;
     public OneBattlePhase[] phases;
     public RentalPartySO rentalParty;
+    public EmotionDeckSO deckConfig;
 }
