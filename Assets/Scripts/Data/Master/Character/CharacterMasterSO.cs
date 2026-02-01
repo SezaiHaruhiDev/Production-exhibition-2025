@@ -25,5 +25,7 @@ public abstract class CharacterMasterSO : ScriptableObject
     public int exp;
     public int level;
     public int speed;
+    public GrowthTableSO growthTable;
     public List<int> skillId = new List<int>();
+    public int ultimateSkillId; // キャラクター固有の必殺技ID
 }

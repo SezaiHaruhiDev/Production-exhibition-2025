@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using System.Linq;
 
 /// <summary>
 /// 戦闘中のユニット（味方・敵）の生成と実体の管理を担当するマネージャー
@@ -21,7 +22,18 @@ public class UnitManager : MonoBehaviour
 
     #region Private Fields
     private Dictionary<int, BattleUnit> allbattleunits = new();
+    
+    /// <summary>
+    /// 生成された全てのユニットリスト
+    /// </summary>
     public List<BattleUnit> AllUnits => new List<BattleUnit>(allbattleunits.Values);
+
+    /// <summary>
+    /// 現在生存している全ユニットリスト
+    /// </summary>
+    public List<BattleUnit> ActiveUnits => allbattleunits.Values
+        .Where(u => u != null && u.Data.currentHp > 0).ToList();
+
     private int _nextUnitId = 0;
     private int _currentAllyCount = 0;
     private int _currentEnemyCount = 0;
@@ -101,20 +113,36 @@ public class UnitManager : MonoBehaviour
         }
 
         Transform spawnPoint = targetPoints[spawnIndex];
-        // 親をspawnPointに設定して生成
         BattleUnit battleUnit = Instantiate(_battleunitPrefab, spawnPoint);
         battleUnit.transform.localPosition = Vector3.zero;
         battleUnit.transform.localRotation = Quaternion.identity;
         
-        // オブジェクトの名前をキャラクター名にする
         battleUnit.name = data.name;
 
-        // バトル用のスプライトを優先し、なければBigスプライトをフォールバックとして使う
         Sprite sprite = master.characterBattleSprite != null ? master.characterBattleSprite : master.characterBigSprite;
         
         battleUnit.Setup(data, sprite);
         allbattleunits.Add(data.unitId, battleUnit);
         if (isAlly) _currentAllyCount++; else _currentEnemyCount++;
         _nextUnitId++;
+    }
+    /// <summary>
+    /// ユニットが死亡した際の処理
+    /// </summary>
+    public void OnUnitDead(BattleUnit unit)
+    {
+
+
+        if (unit.Data.isAlly)
+        {
+            var master = registry.GetById(unit.Data.characterId) as AllyMasterSO;
+            Sprite downSprite = (master != null) ? master.downSprite : null;
+            
+            unit.SetDown(true, downSprite);
+        }
+        else
+        {
+            unit.gameObject.SetActive(false);
+        }
     }
 }

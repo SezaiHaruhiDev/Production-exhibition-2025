@@ -9,7 +9,7 @@ using UnityEngine.Assertions;
 /// </summary>
 public class LoadManager : MonoBehaviour
 {
-    public int nextBattleId; // 次戦闘のSO ID（戦闘終了後は-1にリセット）
+    public int nextBattleId; 
     public static LoadManager Instance { get; private set; }
     private bool _initialized = false;
 
@@ -71,7 +71,8 @@ public class LoadManager : MonoBehaviour
     {
         LevelUp,
         HealHp,
-        DamageHp
+        DamageHp,
+        AddExp
     }
 
     /// <summary>
@@ -79,7 +80,7 @@ public class LoadManager : MonoBehaviour
     /// </summary>
     /// <param name="id">キャラクターID</param>
     /// <param name="type">変更内容のタイプ</param>
-    public void UpdateRuntimeData(int id, RuntimeChangeType type)
+    public void UpdateRuntimeData(int id, RuntimeChangeType type, int value = 0)
     {
         RuntimeCharacter data = _runtimeCharacterList.FirstOrDefault(r => r.id == id);
         if (data == null)
@@ -92,6 +93,15 @@ public class LoadManager : MonoBehaviour
         {
             case RuntimeChangeType.LevelUp:
                 data.level++;
+                break;
+            case RuntimeChangeType.HealHp:
+                data.currentHp = Mathf.Min(data.maxHp, data.currentHp + value);
+                break;
+            case RuntimeChangeType.DamageHp:
+                data.currentHp = Mathf.Max(0, data.currentHp - value);
+                break;
+            case RuntimeChangeType.AddExp:
+                AddExperience(data, value);
                 break;
             default:
                 break;
@@ -131,5 +141,38 @@ public class LoadManager : MonoBehaviour
     public RuntimeCharacter GetRuntimeCharacter(int id)
     {
         return _runtimeCharacterList.FirstOrDefault(c => c.id == id);
+    }
+
+    private void AddExperience(RuntimeCharacter data, int expAmount)
+    {
+        CharacterMasterSO master = registry.GetById(data.id);
+        if (master == null || master.growthTable == null)
+        {
+            data.exp += expAmount;
+            return;
+        }
+
+        GrowthTableSO table = master.growthTable;
+        data.exp += expAmount;
+
+        int correctLevel = table.GetLevelFromExp(data.exp);
+        if (correctLevel > data.level)
+        {
+            int oldLevel = data.level;
+            data.level = correctLevel;
+            
+            var gains = table.GetStatGain(data.level);
+            
+            data.maxHp = master.hp + gains.hp;
+            data.maxMp = master.mp + gains.mp;
+            data.atk = master.atk + gains.atk;
+            data.def = master.def + gains.def;
+            data.speed = master.speed + gains.spd;
+
+            data.currentHp = data.maxHp;
+            data.currentMp = data.maxMp;
+
+
+        }
     }
 }

@@ -249,8 +249,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: c6a87aba655c94d8da3e2669dfd319d5, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -275,6 +275,9 @@ MonoBehaviour:
   cardIcon: {fileID: 282982855941271653}
   frameImage: {fileID: 282982855941271653}
   canvasGroup: {fileID: 832904387638360295}
+  smoothSpeed: 12
+  hoverScale: 1.2
+  hoverYOffset: 100
 --- !u!225 &832904387638360295
 CanvasGroup:
   m_ObjectHideFlags: 0

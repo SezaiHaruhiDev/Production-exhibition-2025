@@ -101,6 +101,16 @@ public class SoundManager : MonoBehaviour
             return;
         }
 
+        PlayBGM(clip, volume, transitionTime);
+    }
+
+    /// <summary>
+    /// BGM再生 (AudioClip直接指定)
+    /// </summary>
+    public void PlayBGM(AudioClip clip, float volume = 1f, float transitionTime = 0.5f)
+    {
+        if (clip == null) return;
+
         if (_bgmSource.clip == clip && _bgmSource.isPlaying)
         {
             StartCoroutine(FadeVolume(volume, transitionTime));

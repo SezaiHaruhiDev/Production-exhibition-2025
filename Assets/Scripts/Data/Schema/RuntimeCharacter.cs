@@ -19,6 +19,7 @@ public class RuntimeCharacter
     public int exp;
     public int speed;
     public List<int> skillId;
+    public int ultimateSkillId;
 
     /// <summary>
     /// シリアライゼーション用デフォルトコンストラクタ
@@ -49,6 +50,8 @@ public class RuntimeCharacter
         skillId = new List<int>();
         if (master.skillId != null) skillId.AddRange(master.skillId);
         if (data.skillId != null) skillId.AddRange(data.skillId);
+
+        ultimateSkillId = master.ultimateSkillId;
     }
 
     /// <summary>
@@ -84,5 +87,7 @@ public class RuntimeCharacter
         {
             skillId.AddRange(rental.baseAlly.skillId);
         }
+
+        ultimateSkillId = rental.baseAlly.ultimateSkillId;
     }
 }

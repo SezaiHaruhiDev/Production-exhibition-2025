@@ -20,6 +20,7 @@ using System.Collections.Generic;
         public float currentActionGauge;
         public bool isAlly;
         public List<int> skillIds;
+        public int ultimateSkillId;
 
         /// <summary>
         /// シリアライゼーション用デフォルトコンストラクタ
@@ -44,6 +45,7 @@ using System.Collections.Generic;
             isAlly = true;
             skillIds = new List<int>();
             if(runtime.skillId != null) skillIds.AddRange(runtime.skillId);
+            ultimateSkillId = runtime.ultimateSkillId;
         }
 
         /// <summary>
@@ -64,6 +66,7 @@ using System.Collections.Generic;
             isAlly = false;
             skillIds = new List<int>();
             if(enemy.skillId != null) skillIds.AddRange(enemy.skillId);
+            ultimateSkillId = enemy.ultimateSkillId;
         }
 
         /// <summary>

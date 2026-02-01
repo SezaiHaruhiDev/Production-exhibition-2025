@@ -4,7 +4,6 @@
 public enum SkillCategory
 {
     Attack,
-    Defense,
-    Support,
-    Utility,
+    Heal,
+    Revive,
 }

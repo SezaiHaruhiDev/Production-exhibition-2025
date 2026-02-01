@@ -12,4 +12,6 @@ public class EmotionCardData : ScriptableObject
     public Emotion emotion;
     [Range(1, 3)]
     public int level = 1;
+    public EmotionCardData nextLevelCard;
+    public EmotionCardData previousLevelCard;
 }

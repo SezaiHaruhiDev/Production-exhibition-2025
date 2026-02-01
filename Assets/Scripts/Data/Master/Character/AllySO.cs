@@ -6,4 +6,5 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Master/Ally")]
 public class AllyMasterSO : CharacterMasterSO
 {
+    public Sprite downSprite;
 }

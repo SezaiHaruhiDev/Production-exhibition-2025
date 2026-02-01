@@ -17,11 +17,14 @@ MonoBehaviour:
   characterMiniSprite: {fileID: 21300000, guid: 064704e60c2b44f48b9997adcaea300e, type: 3}
   characterBigSprite: {fileID: 21300000, guid: 8cca1682e249d44848573b6857596561, type: 3}
   characterBattleSprite: {fileID: 21300000, guid: 75fb980fddf9b4294aec095dc1a026c0, type: 3}
-  hp: 100
+  hp: 10
   mp: 100
   atk: 10
   def: 10
   exp: 0
   level: 0
-  speed: 10
-  skillId: 
+  speed: 9
+  growthTable: {fileID: 11400000, guid: d5d550bd6b47b1248a83fc638d4bf54e, type: 2}
+  skillId: 0000000000000000
+  ultimateSkillId: 0
+  downSprite: {fileID: 21300000, guid: 3bb455f8713eb48478e8db9e700b60a2, type: 3}

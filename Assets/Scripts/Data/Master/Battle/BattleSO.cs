@@ -11,4 +11,6 @@ public class BattleSO : ScriptableObject
     public OneBattlePhase[] phases;
     public RentalPartySO rentalParty;
     public EmotionDeckSO deckConfig;
+    public VictoryConditionSO victoryCondition;
+    public AudioClip battleBGM;
 }

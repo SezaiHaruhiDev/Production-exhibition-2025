@@ -29,19 +29,21 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
         var cardUI = eventData.pointerDrag?.GetComponent<BattleEmotionCard>();
         if (cardUI != null)
         {
+            // 重要：先にカードを「消費済み」としてマークし、UIオブジェクトを非アクティブにする。
+            // これにより、この後のOnCardRemoved等で走るUpdateHandViewが、このUIを「手札にあるカード」と誤認するのを防ぐ。
+            var cardData = cardUI.Data;
+            cardUI.OnConsumedBySlot();
+
             // すでにカードがある場合は入れ替える（古い方を戻す）
             if (CurrentCard != null)
             {
-                OnCardRemoved?.Invoke(CurrentCard);
+                var oldCard = CurrentCard;
+                Clear(); // 確実にスロットを空にする
+                OnCardRemoved?.Invoke(oldCard);
             }
 
-            SetCard(cardUI.Data);
-            
-            // ドロップ元のカードUIに対して「セット成功」を伝える
-            // （呼び出し元でDestroyなどが呼ばれる想定）
-            cardUI.OnConsumedBySlot();
-
-            OnCardSet?.Invoke(CurrentCard);
+            SetCard(cardData);
+            OnCardSet?.Invoke(cardData);
         }
     }
 

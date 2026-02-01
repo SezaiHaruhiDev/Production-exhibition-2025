@@ -10,14 +10,27 @@ public class EmotionDeckManager : MonoBehaviour
     [Header("Deck Config")]
     [SerializeField] private List<EmotionCardData> debugDeckSource;
     [SerializeField] private int initialDrawCount = 5;
+    [SerializeField] private int maxHandSize = 10;
+    public int MaxHandSize => maxHandSize;
 
     private Queue<EmotionCardData> _deck = new Queue<EmotionCardData>();
     private List<EmotionCardData> _hand = new List<EmotionCardData>();
     private List<EmotionCardData> _discard = new List<EmotionCardData>();
 
+    /// <summary>
+    /// 現在の手札
+    /// </summary>
     public IReadOnlyList<EmotionCardData> Hand => _hand;
 
+    /// <summary>
+    /// 手札の内容が変更されたときに発行されるイベント
+    /// </summary>
     public event System.Action OnHandChanged;
+
+    /// <summary>
+    /// デッキまたは捨て札にカードが残っているかどうか
+    /// </summary>
+    public bool CanDraw => _deck.Count > 0 || _discard.Count > 0;
 
     /// <summary>
     /// デッキを構築してシャッフルする
@@ -44,7 +57,7 @@ public class EmotionDeckManager : MonoBehaviour
             _deck.Enqueue(card);
         }
 
-        Debug.Log($"Deck Initialized. Count: {_deck.Count}");
+
 
         Draw(initialDrawCount);
     }
@@ -56,6 +69,8 @@ public class EmotionDeckManager : MonoBehaviour
     {
         for (int i = 0; i < count; i++)
         {
+            if (_hand.Count >= maxHandSize) break;
+
             if (_deck.Count == 0)
             {
                 ReshuffleDiscardToDeck();
@@ -94,29 +109,80 @@ public class EmotionDeckManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 2つの同じカードを合成してレベルアップさせる
+    /// </summary>
+    public bool Synthesize(EmotionCardData cardA, EmotionCardData cardB)
+    {
+        if (cardA == null || cardB == null) return false;
+
+        // 同じ感情かつ同じレベル、かつ次のレベルのカードが存在する場合のみ合成可能
+        if (cardA.emotion == cardB.emotion && cardA.level == cardB.level && cardA.nextLevelCard != null)
+        {
+            // 手札に両方が存在することを確認（同じインスタンスが複数ある場合も考慮）
+            int count = _hand.Count(c => c == cardA);
+            if (count < 2 && cardA == cardB)
+            {
+                return false;
+            }
+
+            _hand.Remove(cardA);
+            _hand.Remove(cardB);
+            _hand.Add(cardA.nextLevelCard);
+            
+            NotifyHandChanged();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// カードを使用する（手札から削除して捨て札へ）
     /// </summary>
     public void UseCard(EmotionCardData card)
     {
+        if (card == null) return;
+
         if (_hand.Contains(card))
         {
             _hand.Remove(card);
-            _discard.Add(card);
-            NotifyHandChanged();
         }
+        
+        DiscardCard(card, true);
+    }
+
+    /// <summary>
+    /// カードを捨て札に送る（手札からの削除は行わない。スロット等ですでに手札から抜けている場合に用いる）
+    /// 合成カード（Level > 1）の場合は分解して基礎カードとして捨て札へ送る
+    /// </summary>
+    public void DiscardCard(EmotionCardData card, bool notifyHand = true)
+    {
+        if (card == null) return;
+
+        if (card.level > 1 && card.previousLevelCard != null)
+        {
+            // 分解：2枚の前のレベルのカードとして扱う
+            DiscardCard(card.previousLevelCard, false);
+            DiscardCard(card.previousLevelCard, false);
+        }
+        else
+        {
+            _discard.Add(card);
+        }
+
+        if (notifyHand) NotifyHandChanged();
     }
 
     private void NotifyHandChanged()
     {
         OnHandChanged?.Invoke();
-        Debug.Log($"Hand Updated. Count: {_hand.Count}");
     }
 
     private void ReshuffleDiscardToDeck()
     {
         if (_discard.Count == 0) return;
 
-        Debug.Log("Reshuffling Discard pile to Deck...");
+
         ShuffleList(_discard);
         foreach (var card in _discard)
         {

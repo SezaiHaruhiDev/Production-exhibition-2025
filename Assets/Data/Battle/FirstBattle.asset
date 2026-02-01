@@ -27,3 +27,5 @@ MonoBehaviour:
     - {fileID: 11400000, guid: de1d20adb47204444b6e8131fd2d37ec, type: 2}
   rentalParty: {fileID: 11400000, guid: 1d96a3c8f823b487194f41d030c54ee4, type: 2}
   deckConfig: {fileID: 11400000, guid: 62a239d2983e644d9bcdbd03a1980621, type: 2}
+  victoryCondition: {fileID: 11400000, guid: d5cb99817b08fa74cb7ae1633b76b60d, type: 2}
+  battleBGM: {fileID: 8300000, guid: fad935a8bce05ac4badc037b496dd815, type: 3}

@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using TMPro;
 
 /// <summary>
 /// スキル選択ボタン（ドロップ受け入れ機能付き）
@@ -12,7 +11,7 @@ using TMPro;
 public class BattleSkillButton : MonoBehaviour
 {
     [SerializeField] private Button button;
-    [SerializeField] private TextMeshProUGUI skillNameText;
+    [SerializeField] private Image skillIconImage;
 
     private SkillData _currentSkill;
     private BattleUIManager _manager;
@@ -33,11 +32,27 @@ public class BattleSkillButton : MonoBehaviour
     public void Configure(SkillData skill)
     {
         _currentSkill = skill;
-        if (skillNameText != null)
+        
+        // アイコンの設定
+        if (skillIconImage != null)
         {
-            skillNameText.text = skill.displayName;
+            if (skill.skillIcon != null)
+            {
+                skillIconImage.sprite = skill.skillIcon;
+                skillIconImage.gameObject.SetActive(true);
+            }
+            else
+            {
+                // アイコンがない場合はボタン自体を非表示にする（テキスト廃止のため）
+                skillIconImage.gameObject.SetActive(false);
+                Debug.LogWarning($"Skill '{skill.displayName}' has no icon assigned!");
+            }
         }
+
         gameObject.SetActive(true);
+        
+        int currentMP = Object.FindFirstObjectByType<TurnManager>()?.BattleCurrentMP ?? 0;
+        UpdateUsability(currentMP);
     }
 
     /// <summary>
@@ -46,6 +61,34 @@ public class BattleSkillButton : MonoBehaviour
     public void Disable()
     {
         gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// 現在のMPに応じてボタンの有効・無効を切り替える
+    /// </summary>
+    public void UpdateUsability(int currentMP)
+    {
+        if (_currentSkill == null || _manager == null) return;
+        
+        bool hasEnoughMP = currentMP >= _currentSkill.imaginationCost;
+        bool isReviveEligible = true;
+
+        // 蘇生スキルの場合、死亡者がいるかチェック
+        if (_currentSkill.IsReviveSkill(_manager.SelectedEmotion))
+        {
+            isReviveEligible = _manager.HasDeadAllies();
+        }
+
+        bool canUse = hasEnoughMP && isReviveEligible;
+        button.interactable = canUse;
+
+        // 見た目のフィードバック
+        Color feedbackColor = canUse ? Color.white : new Color(1, 1, 1, 0.5f);
+        
+        if (skillIconImage != null)
+        {
+            skillIconImage.color = feedbackColor;
+        }
     }
 
     /// <summary>

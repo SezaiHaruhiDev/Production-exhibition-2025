@@ -23,9 +23,15 @@ public class TurnManager : MonoBehaviour
 
     [Header("Managers")]
     [SerializeField] private BattleDatabaseSO battleDatabaseSO;
+    [SerializeField] private SkillDatabaseSO skillDatabaseSO;
     [SerializeField] private UnitManager unitManager;
     [SerializeField] private BattleUIManager battleUI;
     [SerializeField] private EmotionDeckManager deckManager;
+    [SerializeField] private BattlePresentationManager presentationManager;
+
+    [Header("Victory Condition")]
+    [SerializeField] private VictoryConditionSO defaultVictoryCondition;
+    private VictoryConditionSO _currentVictoryCondition;
 
     [Header("State")]
     [SerializeField] private BattleState state;
@@ -37,15 +43,43 @@ public class TurnManager : MonoBehaviour
     public int BattleMaxMP => battleMaxMp;
     public int BattleCurrentMP => battleCurrentMp;
 
+    [Header("Ultimate System")]
+    [SerializeField] private float battleUltimateGauge; // 0.0 to 100.0
+    public float BattleUltimateGauge => battleUltimateGauge;
+    public bool IsUltimateReady => battleUltimateGauge >= 100f;
+    private bool _isInterrupting = false;
+    private struct UltimateAction
+    {
+        public BattleUnit actor;
+        public List<BattleUnit> targets;
+    }
+    private Queue<UltimateAction> _ultimateQueue = new Queue<UltimateAction>();
+    private bool _skipTurnRequested = false;
+    private const int SKIP_TURN_MP_RECOVERY = 20;
+
+    public UnitManager UnitManager => unitManager;
+
+
     public event System.Action<int, int> OnMPChanged;
+    public event System.Action<float, float> OnUltimateChanged;
+    public event System.Action<int> OnTurnCountChanged;
+
+    [Header("Time Based Turn")]
+    [SerializeField] private float avPerTurn = 1000f; // 1000行動値ごとに1ターンとカウントする
+    private float _totalAV = 0f;
+    private int _currentTurnCount = 1;
+
+    public int CurrentTurnCount => _currentTurnCount;
 
     private void Awake()
     {
         if (unitManager == null) unitManager = GetComponent<UnitManager>();
         if (battleUI == null) battleUI = FindFirstObjectByType<BattleUIManager>();
         if (deckManager == null) deckManager = GetComponent<EmotionDeckManager>();
+        if (presentationManager == null) presentationManager = FindFirstObjectByType<BattlePresentationManager>();
 
         Assert.IsNotNull(battleDatabaseSO, "TurnManager: BattleDatabaseSO is not assigned.");
+        Assert.IsNotNull(skillDatabaseSO, "TurnManager: SkillDatabaseSO is not assigned.");
         Assert.IsNotNull(unitManager, "TurnManager: UnitManager is not assigned or found.");
         if (battleUI == null) Debug.LogWarning("TurnManager: BattleUIManager not found.");
     }
@@ -74,13 +108,16 @@ public class TurnManager : MonoBehaviour
         state = BattleState.Start;
 
         BattleSO battleData = battleDatabaseSO.GetById(battleId);
+        if (battleData != null && battleData.battleBGM != null)
+        {
+            SoundManager.Instance.PlayBGM(battleData.battleBGM);
+        }
         if (battleData == null)
         {
             Debug.LogError($"TurnManager: Battle Data not found for ID {battleId}");
             yield break;
         }
 
-        // 味方の生成
         if (battleData.partyType == PartySourceType.Rental)
         {
             if (battleData.rentalParty != null)
@@ -94,7 +131,6 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
-            // PartyManagerから現在のパーティーメンバーを取得して生成
             if (PartyManager.Instance != null)
             {
                 var partyCharacters = PartyManager.Instance.GetPartyCharacters();
@@ -128,31 +164,108 @@ public class TurnManager : MonoBehaviour
 
         InitializeSharedMP();
 
-        yield return new WaitForSeconds(1f);
+        _currentVictoryCondition = battleData.victoryCondition;
+        if (_currentVictoryCondition == null)
+        {
+            _currentVictoryCondition = defaultVictoryCondition;
+        }
 
-        state = BattleState.PlayerTurn; // ここも後で適切なState管理に変える必要あり
+        // --- 演出開始 ---
+        if (presentationManager != null)
+        {
+            yield return StartCoroutine(presentationManager.PlayBattleStartSequence());
+        }
+        else
+        {
+            yield return new WaitForSeconds(1f);
+        }
+
+        state = BattleState.PlayerTurn;
+        battleUltimateGauge = 0;
+        OnUltimateChanged?.Invoke(battleUltimateGauge, 100f);
+        
         StartCoroutine(RunBattleLoop());
+        StartCoroutine(UltimateInterruptionProcessor());
     }
 
     private IEnumerator RunBattleLoop()
     {
         const float GOAL = 100000f;
 
+        // 初期ターン通知
+        OnTurnCountChanged?.Invoke(_currentTurnCount);
+
         while (state != BattleState.Won && state != BattleState.Lost)
         {
-            float minTime = unitManager.AllUnits.Min(u => u.Data.GetRemainingTime(GOAL));
-            foreach (var unit in unitManager.AllUnits)
+            // RunBattleLoopからは必殺技の直接実行を削除（UltimateInterruptionProcessorが担当）
+
+            if (_currentVictoryCondition != null)
+            {
+                BattleState result = _currentVictoryCondition.CheckVictory(this);
+                if (result != BattleState.Start)
+                {
+                    state = result;
+                    EndBattle();
+                    yield break;
+                }
+            }
+
+            var activeUnits = unitManager.ActiveUnits;
+            if (activeUnits.Count == 0) yield break; 
+
+            // 一番早くターンが回ってくるまでの時間（Action Value）を計算
+            float minTime = activeUnits.Min(u => u.Data.GetRemainingTime(GOAL));
+            
+            // 時間を進める
+            foreach (var unit in activeUnits)
             {
                 unit.Data.AdvanceGauge(minTime);
             }
 
-            var actionCharacter = unitManager.AllUnits.FirstOrDefault(u => u.Data.currentActionGauge >= GOAL - 0.01f);
-
-            if (actionCharacter != null)
+            // グローバルな経過時間（Action Value）を加算し、ターン数を更新
+            _totalAV += minTime;
+            int nextTurnCount = Mathf.FloorToInt(_totalAV / avPerTurn) + 1;
+            if (nextTurnCount > _currentTurnCount)
             {
-                yield return StartCoroutine(UnitTurn(actionCharacter));
-                actionCharacter.Data.currentActionGauge = 0f;
+                _currentTurnCount = nextTurnCount;
+                OnTurnCountChanged?.Invoke(_currentTurnCount);
+                Debug.Log($"[TurnManager] Global Turn Advanced: {_currentTurnCount} (Total AV: {_totalAV})");
             }
+
+            // 目標値に達したユニットを探す
+            // 複数いる場合は、目標値を「より大きく超えた（=溢れた）」順に処理する
+            var readyUnits = activeUnits
+                .Where(u => u.Data.currentActionGauge >= GOAL - 0.01f)
+                .OrderByDescending(u => u.Data.currentActionGauge)
+                .ToList();
+
+            foreach (var actionCharacter in readyUnits)
+            {
+                if (state == BattleState.Won || state == BattleState.Lost) break;
+                if (!unitManager.ActiveUnits.Contains(actionCharacter)) continue; // 途中で死亡した場合など
+
+                while (_isInterrupting) yield return null;
+                yield return StartCoroutine(UnitTurn(actionCharacter));
+                
+                // 目標値を「引く」ことで、オーバーした分の速度を次回のターンに持ち越す
+                actionCharacter.Data.currentActionGauge -= GOAL;
+            }
+
+            yield return null; // Safety yield to prevent infinite loop/freeze
+        }
+    }
+
+    private void EndBattle()
+    {
+        Debug.Log($"Battle Ended! Result: {state}");
+        SoundManager.Instance.StopBGM();
+        if (state == BattleState.Won)
+        {
+            Debug.Log("YOU WIN!");
+        }
+        else if (state == BattleState.Lost)
+        {
+            Debug.Log("YOU LOSE...");
         }
     }
 
@@ -165,13 +278,15 @@ public class TurnManager : MonoBehaviour
 
     private IEnumerator UnitTurn(BattleUnit unit)
     {
-        Debug.Log($"Turn Start: {unit.Data.characterId} (Ally:{unit.Data.isAlly})");
+        unit.SetTurnActive(true);
+        _skipTurnRequested = false;
+        while (_isInterrupting) yield return null;
+
 
         if (unit.Data.isAlly)
         {
             state = BattleState.PlayerTurn;
 
-            // 味方のターン開始時にカードを1枚ドロー
             if (deckManager != null)
             {
                 deckManager.Draw(1);
@@ -196,23 +311,24 @@ public class TurnManager : MonoBehaviour
                                 currentSkill = battleUI.SelectedSkill;
                                 currentEmotion = battleUI.SelectedEmotion;
 
-                                // ターゲット選択可能状態にする
                                 SetupTargetSelection(unit, currentSkill, currentEmotion, true);
                                 commandState = CommandState.SelectTarget;
+                            }
+                            else if (!battleUI.IsSkillPanelActive && !_isInterrupting)
+                            {
+                                // 必殺技選択などでパネルが閉じられた場合に再表示する
+                                battleUI.ShowSkillPanel(unit.Data);
                             }
                             break;
 
                         case CommandState.SelectTarget:
-                            // 常に最新の選択状態をUIから取っておく（感情カードの付け替えに対応）
                             if (battleUI.SelectedSkill != currentSkill || battleUI.SelectedEmotion != currentEmotion)
                             {
-                                // 前の選択を解除
                                 SetupTargetSelection(unit, currentSkill, currentEmotion, false);
 
                                 currentSkill = battleUI.SelectedSkill;
                                 currentEmotion = battleUI.SelectedEmotion;
 
-                                // 新しい条件でセットアップ
                                 if (currentSkill != null)
                                 {
                                     SetupTargetSelection(unit, currentSkill, currentEmotion, true);
@@ -221,7 +337,6 @@ public class TurnManager : MonoBehaviour
 
                             if (!battleUI.IsSkillSelected)
                             {
-                                // スキル解除されたら選択状態をリセット
                                 SetupTargetSelection(unit, currentSkill, currentEmotion, false);
                                 currentSkill = null;
                                 currentEmotion = null;
@@ -229,10 +344,9 @@ public class TurnManager : MonoBehaviour
                                 break;
                             }
 
-                            // クリックによる選択待ち
                             if (_lastClickedUnit != null)
                             {
-                                selectedTargets.Clear(); // 選択をリセットしてやり直し
+                                selectedTargets.Clear();
 
                                 SkillTargetType effectiveType = currentSkill.GetEffectiveTargetType(currentEmotion);
                                 switch (effectiveType)
@@ -245,10 +359,10 @@ public class TurnManager : MonoBehaviour
                                         selectedTargets.Add(_lastClickedUnit);
                                         break;
                                     case SkillTargetType.AllEnemies:
-                                        selectedTargets.AddRange(unitManager.AllUnits.Where(u => !u.Data.isAlly && u.Data.currentHp > 0));
+                                        selectedTargets.AddRange(unitManager.AllUnits.Where(u => !u.Data.isAlly));
                                         break;
                                     case SkillTargetType.AllAllies:
-                                        selectedTargets.AddRange(unitManager.AllUnits.Where(u => u.Data.isAlly && u.Data.currentHp > 0));
+                                        selectedTargets.AddRange(unitManager.AllUnits.Where(u => u.Data.isAlly));
                                         break;
                                 }
 
@@ -257,6 +371,24 @@ public class TurnManager : MonoBehaviour
                             }
                             break;
                     }
+                    if (_skipTurnRequested)
+                    {
+                        Debug.Log("Turn skipped by player.");
+                        AddMP(SKIP_TURN_MP_RECOVERY);
+                        
+                        // 全てのターゲットマークを消去
+                        foreach (var u in unitManager.AllUnits)
+                        {
+                            u.SetSelectable(false);
+                            u.OnSelected -= OnUnitClicked;
+                        }
+
+                        commandState = CommandState.Confirmed;
+                        currentSkill = null;
+                        currentEmotion = null;
+                        selectedTargets.Clear();
+                        break;
+                    }
                     yield return null;
                 }
 
@@ -264,22 +396,26 @@ public class TurnManager : MonoBehaviour
 
                 string emoText = currentEmotion != null ? currentEmotion.emotionName : "無し";
                 string targetsText = string.Join(", ", selectedTargets.Select(t => t.Data.name));
-                Debug.Log($"Player Action: {currentSkill.displayName} on [{targetsText}] (Emotion: {emoText})");
+
 
                 if (currentEmotion != null && deckManager != null)
                 {
-                    deckManager.UseCard(currentEmotion);
+                    // スロットに入れた時点で手札からは抜けているので、
+                    // ここでは単に「捨て札に送る」だけでよい。
+                    // notifyHand: false にすることで、手札UIの再描画による意図しない2重消費を防ぐ。
+                    deckManager.DiscardCard(currentEmotion, false);
+                    
+                    if (battleUI != null) battleUI.ClearSlot();
                 }
 
-                // ここでダメージ処理などを実行する
-                foreach (var target in selectedTargets)
+                if (currentSkill != null)
                 {
-                    // 簡易的なダメージ計算（本来はSkillEffectクラスなどで処理）
-                    int damage = currentSkill.basePower;
-                    target.Data.currentHp = Mathf.Max(0, target.Data.currentHp - damage);
-                    target.RefreshHPBar();
-                    target.ShowDamage(damage); // ダメージ数字を表示
-                    Debug.Log($"{target.Data.name} took {damage} damage! HP: {target.Data.currentHp}/{target.Data.maxHp}");
+                    if (currentSkill.imaginationCost > 0)
+                    {
+                        ConsumeMP(currentSkill.imaginationCost);
+                    }
+                    AddUltimateCharge(currentSkill.ultimateChargeValue);
+                    SkillExecutor.Execute(unit, selectedTargets, currentSkill, currentEmotion);
                 }
 
                 yield return new WaitForSeconds(1f);
@@ -288,9 +424,31 @@ public class TurnManager : MonoBehaviour
         else
         {
             state = BattleState.EnemyTurn;
-            Debug.Log("Enemy Action: AI processing...");
-            yield return new WaitForSeconds(1f);
+            
+            var master = registry.GetById(unit.Data.characterId) as EnemyMasterSO;
+            if (master != null && master.aiLogic != null)
+            {
+                yield return StartCoroutine(master.aiLogic.ExecuteTurn(unit, this));
+            }
+            else
+            {
+                Debug.LogWarning($"Enemy {unit.Data.name} has no AI Logic assigned or Master not found!");
+                yield return null; // Safety yield
+            }
         }
+
+        // ターン終了時にスロットに残っている場合は手札に戻す
+        if (battleUI != null) battleUI.ResetSlotToHand();
+        unit.SetTurnActive(false);
+    }
+
+    /// <summary>
+    /// IDからスキルデータを取得する（AIなどが使用）
+    /// </summary>
+    public SkillData GetSkillData(int id)
+    {
+        if (skillDatabaseSO != null) return skillDatabaseSO.GetById(id);
+        return null;
     }
 
     private BattleUnit _lastClickedUnit;
@@ -306,7 +464,7 @@ public class TurnManager : MonoBehaviour
         if (skill != null && active)
         {
             SkillTargetType effectiveType = skill.GetEffectiveTargetType(card);
-            Debug.Log($"[Targeting] Skill: {skill.displayName}, EffectiveTargetType: {effectiveType} (Card: {(card != null ? card.emotionName : "None")})");
+
 
             foreach (var unit in unitManager.AllUnits)
             {
@@ -320,10 +478,17 @@ public class TurnManager : MonoBehaviour
                     case SkillTargetType.SingleEnemy:
                     case SkillTargetType.AllEnemies:
                         isSelectable = !unit.Data.isAlly;
+                        
+                        
+                        
                         break;
-                    case SkillTargetType.SingleAlly:
                     case SkillTargetType.AllAllies:
-                        isSelectable = unit.Data.isAlly;
+                         isSelectable = unit.Data.isAlly;
+                         
+                         
+                         break;
+                    case SkillTargetType.SingleAlly:
+                         isSelectable = unit.Data.isAlly;
                         break;
                 }
 
@@ -336,7 +501,6 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
-            // 全解除
             foreach (var unit in unitManager.AllUnits)
             {
                 unit.OnSelected -= OnUnitClicked;
@@ -348,20 +512,15 @@ public class TurnManager : MonoBehaviour
 
     private void Update()
     {
-        // デバッグ用: NキーでMPを100消費、Pキーで100回復
         if (Input.GetKeyDown(KeyCode.N))
         {
             ConsumeMP(100);
-            Debug.Log($"Debug: Consumed 100 MP. Current: {battleCurrentMp}");
         }
         if (Input.GetKeyDown(KeyCode.P))
         {
-            battleCurrentMp = Mathf.Min(battleMaxMp, battleCurrentMp + 100);
-            OnMPChanged?.Invoke(battleCurrentMp, battleMaxMp);
-            Debug.Log($"Debug: Restored 100 MP. Current: {battleCurrentMp}");
+            AddMP(100);
         }
 
-        // デバッグ用: Hキーで味方全員のHP減少、Jキーで回復
         if (Input.GetKeyDown(KeyCode.H))
         {
             foreach (var unit in unitManager.AllUnits.Where(u => u.Data.isAlly))
@@ -397,7 +556,7 @@ public class TurnManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"Shared MP Initialized: {battleCurrentMp}/{battleMaxMp}");
+
         OnMPChanged?.Invoke(battleCurrentMp, battleMaxMp);
     }
 
@@ -408,5 +567,126 @@ public class TurnManager : MonoBehaviour
     {
         battleCurrentMp = Mathf.Max(0, battleCurrentMp - amount);
         OnMPChanged?.Invoke(battleCurrentMp, battleMaxMp);
+    }
+
+    /// <summary>
+    /// 共有MPを回復する
+    /// </summary>
+    public void AddMP(int amount)
+    {
+        battleCurrentMp = Mathf.Min(battleMaxMp, battleCurrentMp + amount);
+        OnMPChanged?.Invoke(battleCurrentMp, battleMaxMp);
+    }
+
+    /// <summary>
+    /// アルティメットゲージをチャージする
+    /// </summary>
+    public void AddUltimateCharge(float amount)
+    {
+        battleUltimateGauge = Mathf.Min(100f, battleUltimateGauge + amount);
+        OnUltimateChanged?.Invoke(battleUltimateGauge, 100f);
+    }
+
+    /// <summary>
+    /// アルティメット割り込みモードを開始または終了する
+    /// </summary>
+    public void TryActivateUltimateMode()
+    {
+        // すでに実行アニメーション中ならトグル（キャンセル）不可
+        if (_ultimateQueue.Count > 0) return;
+
+        if (_isInterrupting)
+        {
+            // 選択中であればキャンセル可能
+            if (battleUI != null && battleUI.IsInUltimateSelection)
+            {
+                CancelUltimateMode();
+                battleUI.CancelUltimateSelection();
+                return;
+            }
+            return;
+        }
+
+        if (!IsUltimateReady) return;
+
+        _isInterrupting = true;
+        Time.timeScale = 0.1f; // スローモーション
+
+        // UIにターゲット選択を促す（BattleUIManager側で処理）
+        if (battleUI != null)
+        {
+            battleUI.EnterUltimateSelectionMode();
+        }
+    }
+
+    /// <summary>
+    /// 必殺技を予約する
+    /// </summary>
+    public void EnqueueUltimate(BattleUnit unit, List<BattleUnit> targets)
+    {
+        _ultimateQueue.Enqueue(new UltimateAction { actor = unit, targets = targets });
+        Time.timeScale = 1.0f; 
+        _isInterrupting = false;
+        
+        battleUltimateGauge = 0; 
+        OnUltimateChanged?.Invoke(battleUltimateGauge, 100f);
+    }
+
+    /// <summary>
+    /// メインループとは独立して必殺技を即時実行する監視コルーチン
+    /// </summary>
+    private IEnumerator UltimateInterruptionProcessor()
+    {
+        while (state != BattleState.Won && state != BattleState.Lost)
+        {
+            if (_ultimateQueue.Count > 0)
+            {
+                var action = _ultimateQueue.Dequeue();
+                yield return StartCoroutine(ExecuteUltimate(action.actor, action.targets));
+                
+                // 全ての予約済み必殺技が終わったら、割り込みを解除
+                if (_ultimateQueue.Count == 0)
+                {
+                    _isInterrupting = false;
+                    Time.timeScale = 1.0f;
+                }
+            }
+            yield return null;
+        }
+    }
+
+    /// <summary>
+    /// 指定したユニットで必殺技を実行（独立プロセッサから呼ばれる）
+    /// </summary>
+    private IEnumerator ExecuteUltimate(BattleUnit unit, List<BattleUnit> targets)
+    {
+        unit.SetTurnActive(true);
+        SkillData ultSkill = skillDatabaseSO.GetById(unit.Data.ultimateSkillId);
+        if (ultSkill != null)
+        {
+            SkillExecutor.Execute(unit, targets, ultSkill, null);
+            yield return new WaitForSeconds(1.5f * (Time.timeScale < 1.0f ? 0.1f : 1.0f)); // 演出時間を確保
+        }
+        unit.SetTurnActive(false);
+    }
+
+    /// <summary>
+    /// 割り込みをキャンセルする
+    /// </summary>
+    public void CancelUltimateMode()
+    {
+        Time.timeScale = 1.0f;
+        _isInterrupting = false;
+    }
+
+    /// <summary>
+    /// 現在のターンをスキップするリクエストを送る
+    /// </summary>
+    public void RequestTurnSkip()
+    {
+        if (state == BattleState.PlayerTurn && !_isInterrupting)
+        {
+            _skipTurnRequested = true;
+        }
     }
 }

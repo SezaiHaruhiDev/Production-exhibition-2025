@@ -13,7 +13,7 @@ public class SkillDatabaseSO : ScriptableObject
     /// <summary>
     /// IDからスキルデータを検索する
     /// </summary>
-    public SkillData GetById(string id)
+    public SkillData GetById(int id)
     {
         if (skillList == null) return null;
         return skillList.FirstOrDefault(s => s.skillId == id);

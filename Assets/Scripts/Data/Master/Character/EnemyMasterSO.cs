@@ -6,4 +6,5 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Master/Enemy")]
 public class EnemyMasterSO : CharacterMasterSO
 {
+    public EnemyLogicSO aiLogic;
 }

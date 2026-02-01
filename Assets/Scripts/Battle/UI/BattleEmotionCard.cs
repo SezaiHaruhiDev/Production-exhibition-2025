@@ -4,18 +4,52 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// ドラッグ可能な感情カードUI
+/// ドラッグ可能な感情カードUI（DCG風のアニメーション対応）
 /// </summary>
-public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private TextMeshProUGUI emotionNameText;
     [SerializeField] private Image cardIcon;
     [SerializeField] private Image frameImage;
     [SerializeField] private CanvasGroup canvasGroup;
 
+    [Header("Animation Settings")]
+    [SerializeField] private float smoothSpeed = 12f;
+    [SerializeField] private float hoverScale = 1.2f;
+    [SerializeField] private float hoverYOffset = 100f;
+    [SerializeField] private int hoverSortOrderOffset = 100;
+
     public EmotionCardData Data { get; private set; }
-    private Transform _originalParent;
-    private Vector3 _startPosition;
+    public bool IsConsumed => _isConsumed;
+    
+    private Canvas _canvas;
+    private GraphicRaycaster _raycaster;
+    private Vector3 _layoutPosition;
+    private Quaternion _layoutRotation;
+    private int _baseSortOrder = 0;
+    private bool _isHovered = false;
+    private bool _isDragging = false;
+    private bool _isConsumed = false;
+    private bool _isAnimating = false;
+
+    private Vector3 _startDragPosition;
+
+    private void Awake()
+    {
+        // Canvasコンポーネントの準備（なければ追加）
+        _canvas = GetComponent<Canvas>();
+        if (_canvas == null)
+        {
+            _canvas = gameObject.AddComponent<Canvas>();
+        }
+        _canvas.overrideSorting = true;
+
+        _raycaster = GetComponent<GraphicRaycaster>();
+        if (_raycaster == null)
+        {
+            _raycaster = gameObject.AddComponent<GraphicRaycaster>();
+        }
+    }
 
     public void Setup(EmotionCardData data)
     {
@@ -34,13 +68,110 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
         {
             frameImage.color = data.cardThemeColor;
         }
+
+        UpdateVisualState();
+    }
+
+    /// <summary>
+    /// ドローアニメーション（山札→中央で見せつけ→手札）の開始
+    /// </summary>
+    public void PlayDrawAnimation(Vector3 startWorldPos, Vector3 centerWorldPos)
+    {
+        StartCoroutine(DrawAnimationCoroutine(startWorldPos, centerWorldPos));
+    }
+
+    private System.Collections.IEnumerator DrawAnimationCoroutine(Vector3 startWorldPos, Vector3 centerWorldPos)
+    {
+        _isAnimating = true;
+        
+        // 開始位置（山札）
+        transform.position = startWorldPos;
+        transform.localScale = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
+
+        // 1. 画面中央へ移動しつつ拡大
+        float duration = 0.5f;
+        float elapsed = 0f;
+        
+        if (_canvas != null) _canvas.sortingOrder = 999; // 最前面
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            // イージング（少し勢いよく出る）
+            float curve = 1f - Mathf.Pow(1f - t, 3); 
+            
+            transform.position = Vector3.Lerp(transform.position, centerWorldPos, curve);
+            transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one * 2.5f, curve);
+            yield return null;
+        }
+
+        // 2. 見せつけ休止
+        yield return new WaitForSeconds(0.8f);
+
+        // 3. アニメーション終了（あとはUpdateでの補間に任せる）
+        _isAnimating = false;
+    }
+
+    /// <summary>
+    /// LayoutGroupから基本位置とソート順を設定される
+    /// </summary>
+    public void SetLayoutPosition(Vector3 pos, Quaternion rot, int baseOrder)
+    {
+        _layoutPosition = pos;
+        _layoutRotation = rot;
+        _baseSortOrder = baseOrder;
+    }
+
+    private void Update()
+    {
+        UpdateVisualState();
+    }
+
+    private void UpdateVisualState()
+    {
+        if (_isDragging || _isConsumed || _isAnimating) return;
+
+        // 目標の状態を計算
+        Vector3 targetPos = _layoutPosition;
+        Quaternion targetRot = _layoutRotation;
+        Vector3 targetScale = Vector3.one;
+        int targetSortOrder = _baseSortOrder;
+
+        if (_isHovered)
+        {
+            targetPos += Vector3.up * hoverYOffset;
+            targetRot = Quaternion.identity; // 正面を向く
+            targetScale = Vector3.one * hoverScale;
+            targetSortOrder += hoverSortOrderOffset;
+        }
+
+        // スムーズに補間
+        transform.localPosition = Vector3.Lerp(transform.localPosition, targetPos, Time.deltaTime * smoothSpeed);
+        transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRot, Time.deltaTime * smoothSpeed);
+        transform.localScale = Vector3.Lerp(transform.localScale, targetScale, Time.deltaTime * smoothSpeed);
+        
+        if (_canvas != null)
+        {
+            _canvas.sortingOrder = targetSortOrder;
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        _isHovered = true;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        _isHovered = false;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        _originalParent = transform.parent;
-        _startPosition = transform.position;
-
+        _isDragging = true;
+        _startDragPosition = transform.position;
         canvasGroup.blocksRaycasts = false;
     }
 
@@ -49,24 +180,40 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
         transform.position = eventData.position;
     }
 
-    private bool _isConsumed = false;
-
     public void OnEndDrag(PointerEventData eventData)
     {
+        _isDragging = false;
         canvasGroup.blocksRaycasts = true;
 
         if (!_isConsumed)
         {
-            transform.position = _startPosition;
+            // ドラッグ終了時はLerpで戻るようにするため、localPositionは弄らない（Updateに任せる）
         }
     }
 
-    /// <summary>
-    /// スロットにドロップ成功した時に呼ばれる
-    /// </summary>
+    public void OnDrop(PointerEventData eventData)
+    {
+        var droppedCardUI = eventData.pointerDrag?.GetComponent<BattleEmotionCard>();
+
+        if (droppedCardUI != null && droppedCardUI != this)
+        {
+            var deckManager = Object.FindFirstObjectByType<EmotionDeckManager>();
+            if (deckManager != null)
+            {
+                bool success = deckManager.Synthesize(this.Data, droppedCardUI.Data);
+                if (success)
+                {
+                    droppedCardUI.OnConsumedBySlot(); 
+                    this.OnConsumedBySlot();
+                }
+            }
+        }
+    }
+
     public void OnConsumedBySlot()
     {
         _isConsumed = true;
-        Destroy(gameObject); // 手札から消滅
+        gameObject.SetActive(false); // 即座に非表示にして重なりを防ぐ
+        Destroy(gameObject);
     }
 }

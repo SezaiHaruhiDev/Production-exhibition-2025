@@ -9,8 +9,9 @@ using System.Collections.Generic;
 public class SkillData : ScriptableObject
 {
     [Header("Basic Info")]
-    public string skillId;
+    public int skillId;
     public string displayName;
+    public Sprite skillIcon;
     [TextArea] public string description;
 
     public SkillCategory category;
@@ -44,5 +45,36 @@ public class SkillData : ScriptableObject
         }
 
         return targetType;
+    }
+    /// <summary>
+    /// 感情カードを考慮した効果リストを取得する
+    /// </summary>
+    public List<EffectData> GetEffectiveEffects(EmotionCardData card)
+    {
+        if (card != null)
+        {
+            var set = emotionEffectSet.Find(s => s.emotion == card.emotion && s.level == card.level);
+            if (set != null && set.effectDataList != null && set.effectDataList.Count > 0)
+            {
+                return set.effectDataList;
+            }
+        }
+        return new List<EffectData>();
+    }
+
+    /// <summary>
+    /// 感情カードを考慮して、このスキルが「蘇生」を含むかどうかを判定する
+    /// </summary>
+    public bool IsReviveSkill(EmotionCardData card)
+    {
+        if (card != null)
+        {
+            var set = emotionEffectSet.Find(s => s.emotion == card.emotion && s.level == card.level);
+            if (set != null && set.effectDataList != null)
+            {
+                return set.effectDataList.Exists(e => e.skillCategory == SkillCategory.Revive);
+            }
+        }
+        return category == SkillCategory.Revive;
     }
 }

@@ -6,13 +6,18 @@ using UnityEngine;
 public class BattleUnit : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer _spriteRenderer;
-    [SerializeField] private SpriteRenderer _shadowCaster; // 影を落とす専用のスプライト
+    [SerializeField] private SpriteRenderer _shadowCaster;
     [SerializeField] private UnitHPBarUI _hpBar;
     [SerializeField] private GameObject _damageTextPrefab;
     [SerializeField] private Color _damageColor = Color.red;
+    [SerializeField] private Color _healColor = Color.green;
     [SerializeField] private Vector3 _damageTextOffset = new Vector3(0, 1.5f, 0);
     [SerializeField] private GameObject _targetMark;
     [SerializeField] private Vector3 _targetMarkOffset = new Vector3(0, 1f, -2.0f);
+    [SerializeField] private GameObject _turnIndicator;
+    [SerializeField] private Vector3 _turnIndicatorOffset = new Vector3(0, 2f, -1.0f);
+    
+    private Sprite _originalSprite;
 
     public UnitCharacter Data { get; private set; }
 
@@ -23,25 +28,19 @@ public class BattleUnit : MonoBehaviour
     {
         this.Data = data;
         
-
-        Debug.Log($"[BattleUnit] Setup: {data.name} (Sprite: {(sprite != null ? sprite.name : "NULL")})", gameObject);
-
-        // 各SpriteRendererの自動取得とセット
         if (_spriteRenderer == null) _spriteRenderer = transform.Find("Visual")?.GetComponent<SpriteRenderer>() ?? GetComponentInChildren<SpriteRenderer>();
         if (_shadowCaster == null) _shadowCaster = transform.Find("ShadowCaster")?.GetComponent<SpriteRenderer>();
 
-        // 本体のセットアップ
         if (_spriteRenderer != null)
         {
             _spriteRenderer.sprite = sprite;
+            _originalSprite = sprite;
             AdjustToGround(_spriteRenderer);
         }
 
-        // 影落とし用のセットアップ
         if (_shadowCaster != null)
         {
             _shadowCaster.sprite = sprite;
-            // 本体と同じ位置に合わせる
             _shadowCaster.transform.localPosition = _spriteRenderer.transform.localPosition;
             _shadowCaster.transform.localScale = _spriteRenderer.transform.localScale;
         }
@@ -49,6 +48,9 @@ public class BattleUnit : MonoBehaviour
         RefreshHPBar();
     }
 
+    /// <summary>
+    /// HPバーの表示を最新の状態に更新する
+    /// </summary>
     public void RefreshHPBar()
     {
         if (_hpBar != null && Data != null)
@@ -89,6 +91,9 @@ public class BattleUnit : MonoBehaviour
         float topY = b.max.y - transform.position.y;
         _damageTextOffset = new Vector3(centerX, topY + 0.5f, -1.0f);
 
+        // ターンインジケーター：ダメージテキストより少し下（頭のすぐ上）
+        _turnIndicatorOffset = new Vector3(centerX, topY + 0.2f, -1.0f);
+
         // コライダーのサイズと位置も画像に合わせる（クリック判定用）
         if (_collider is BoxCollider box)
         {
@@ -99,7 +104,31 @@ public class BattleUnit : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// ダメージを表示し、死亡判定を行う
+    /// </summary>
     public void ShowDamage(int amount)
+    {
+        ShowFloatingText(amount, _damageColor);
+
+        if (Data.currentHp <= 0)
+        {
+            var manager = GetComponentInParent<UnitManager>();
+            if (manager == null) manager = FindFirstObjectByType<UnitManager>();
+            
+            manager?.OnUnitDead(this);
+        }
+    }
+
+    /// <summary>
+    /// 回復量を表示する
+    /// </summary>
+    public void ShowHeal(int amount)
+    {
+        ShowFloatingText(amount, _healColor);
+    }
+
+    private void ShowFloatingText(int amount, Color color)
     {
         if (_damageTextPrefab == null) return;
 
@@ -110,7 +139,35 @@ public class BattleUnit : MonoBehaviour
         var damageUI = go.GetComponent<DamageTextUI>();
         if (damageUI != null)
         {
-            damageUI.Setup(amount, _damageColor); 
+            damageUI.Setup(amount, color); 
+        }
+    }
+
+    /// <summary>
+    /// ユニットの戦闘不能（ダウン）状態を切り替える
+    /// </summary>
+    public void SetDown(bool isDown, Sprite downSprite = null)
+    {
+        if (_spriteRenderer == null) return;
+
+        if (isDown)
+        {
+            if (downSprite != null)
+            {
+                _spriteRenderer.sprite = downSprite;
+            }
+            else
+            {
+                _spriteRenderer.color = Color.gray;
+            }
+        }
+        else
+        {
+            if (_originalSprite != null)
+            {
+                _spriteRenderer.sprite = _originalSprite;
+            }
+            _spriteRenderer.color = Color.white;
         }
     }
 
@@ -135,13 +192,20 @@ public class BattleUnit : MonoBehaviour
         {
             _targetMark.SetActive(false);
         }
+
+        if (_turnIndicator != null)
+        {
+            _turnIndicator.SetActive(false);
+        }
     }
 
+    /// <summary>
+    /// ターゲットとして選択可能かどうかを設定する
+    /// </summary>
     public void SetSelectable(bool selectable)
     {
         _isSelectable = selectable;
         
-        // 色を変えるのではなく、ターゲットマークの表示/非表示を切り替える
         if (_targetMark != null)
         {
             if (selectable)
@@ -152,11 +216,26 @@ public class BattleUnit : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// このユニットのターンであるかどうかを設定する
+    /// </summary>
+    public void SetTurnActive(bool active)
+    {
+        if (_turnIndicator != null)
+        {
+            if (active)
+            {
+                _turnIndicator.transform.localPosition = _turnIndicatorOffset;
+            }
+            _turnIndicator.SetActive(active);
+        }
+    }
+
     private void OnMouseDown()
     {
         if (_isSelectable)
         {
-            Debug.Log($"[BattleUnit] Clicked: {Data.name}");
+
             OnSelected?.Invoke(this);
         }
     }
@@ -180,6 +259,12 @@ public class BattleUnit : MonoBehaviour
             if (_targetMark != null && _targetMark.activeSelf)
             {
                 _targetMark.transform.rotation = rot;
+            }
+
+            // ターンインジケーターもカメラの方を向かせる
+            if (_turnIndicator != null && _turnIndicator.activeSelf)
+            {
+                _turnIndicator.transform.rotation = rot;
             }
         }
     }

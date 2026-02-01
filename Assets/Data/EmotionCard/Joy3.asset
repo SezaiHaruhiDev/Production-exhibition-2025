@@ -17,3 +17,5 @@ MonoBehaviour:
   cardThemeColor: {r: 1, g: 1, b: 1, a: 1}
   emotion: 0
   level: 3
+  nextLevelCard: {fileID: 0}
+  previousLevelCard: {fileID: 11400000, guid: 201b2960ba29b481480a54e87ee6cebc, type: 2}
