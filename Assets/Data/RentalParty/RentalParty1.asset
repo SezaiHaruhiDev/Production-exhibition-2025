@@ -16,48 +16,12 @@ MonoBehaviour:
   - baseAlly: {fileID: 11400000, guid: 2a9bafd7a6a57fc4ab7ae5e1434937aa, type: 2}
     name: "\u30ED\u30D3\u30F3\uFF08\u30EC\u30F3\u30BF\u30EB\uFF09"
     level: 0
-    maxHp: 10
-    maxMp: 0
+    maxHp: 100
+    maxMp: 100
     hpRatio: 1
-    mpRatio: 0.5
-    atk: 0
-    def: 0
+    mpRatio: 1
+    atk: 10
+    def: 10
     exp: 0
-    speed: 10
-    skillId: 0000000000000000
-  - baseAlly: {fileID: 11400000, guid: 2a9bafd7a6a57fc4ab7ae5e1434937aa, type: 2}
-    name: "\u30ED\u30D3\u30F3\uFF08\u30EC\u30F3\u30BF\u30EB\uFF09"
-    level: 0
-    maxHp: 20
-    maxMp: 0
-    hpRatio: 1
-    mpRatio: 0.5
-    atk: 0
-    def: 0
-    exp: 0
-    speed: 10
-    skillId: 0000000000000000
-  - baseAlly: {fileID: 11400000, guid: 2a9bafd7a6a57fc4ab7ae5e1434937aa, type: 2}
-    name: "\u30ED\u30D3\u30F3\uFF08\u30EC\u30F3\u30BF\u30EB\uFF09"
-    level: 0
-    maxHp: 10
-    maxMp: 0
-    hpRatio: 1
-    mpRatio: 0.5
-    atk: 100
-    def: 0
-    exp: 0
-    speed: 10
-    skillId: 0000000000000000
-  - baseAlly: {fileID: 11400000, guid: 2a9bafd7a6a57fc4ab7ae5e1434937aa, type: 2}
-    name: "\u30ED\u30D3\u30F3\uFF08\u30EC\u30F3\u30BF\u30EB\uFF09"
-    level: 0
-    maxHp: 10
-    maxMp: 0
-    hpRatio: 1
-    mpRatio: 0.5
-    atk: 0
-    def: 0
-    exp: 0
-    speed: 10
+    speed: 20
     skillId: 0000000000000000

@@ -15,7 +15,10 @@ public class BattlePresentationManager : MonoBehaviour
     [SerializeField] private float _zoomDistance = 4f;       // 手前への距離（小さいほど近い）
     [SerializeField] private float _zoomHeightOffset = -1.5f; // 高さのオフセット（小さいほど低い）
     [SerializeField] private float _zoomSideOffset = 2f;      // 左右へのオフセット（大きくするとより外側に振れる）
-    [SerializeField] private float _moveSpeed = 5f;
+    
+    [Header("Focus Points (Optional)")]
+    [SerializeField] private Transform _enemyFocusPoint;
+    [SerializeField] private Transform _allyFocusPoint;
     
     [Header("References")]
     [SerializeField] private BattleUIManager _uiManager;
@@ -49,19 +52,19 @@ public class BattlePresentationManager : MonoBehaviour
 
         // 1. 敵側にズーム
         var enemies = _unitManager.AllUnits.Where(u => !u.Data.isAlly).ToList();
-        if (enemies.Count > 0)
+        if (enemies.Count > 0 || _enemyFocusPoint != null)
         {
-            Vector3 enemyCenter = GetUnitsCenter(enemies);
-            yield return StartCoroutine(CameraFocusRoutine(enemyCenter, _zoomInFieldOfView, 1.5f));
+            Vector3 targetPos = GetTargetPosition(_enemyFocusPoint, enemies);
+            yield return StartCoroutine(CameraFocusRoutine(targetPos, _zoomInFieldOfView, 1.5f));
             yield return new WaitForSeconds(0.5f);
         }
 
         // 2. 味方側にスライドしてズーム
         var allies = _unitManager.AllUnits.Where(u => u.Data.isAlly).ToList();
-        if (allies.Count > 0)
+        if (allies.Count > 0 || _allyFocusPoint != null)
         {
-            Vector3 allyCenter = GetUnitsCenter(allies);
-            yield return StartCoroutine(CameraFocusRoutine(allyCenter, _zoomInFieldOfView, 1.5f));
+            Vector3 targetPos = GetTargetPosition(_allyFocusPoint, allies);
+            yield return StartCoroutine(CameraFocusRoutine(targetPos, _zoomInFieldOfView, 1.5f));
             yield return new WaitForSeconds(0.5f);
         }
 
@@ -70,6 +73,12 @@ public class BattlePresentationManager : MonoBehaviour
 
         // UIを表示する
         _uiManager?.SetUIVisibility(true);
+    }
+
+    private Vector3 GetTargetPosition(Transform focusPoint, List<BattleUnit> units)
+    {
+        if (focusPoint != null) return focusPoint.position;
+        return GetUnitsCenter(units);
     }
 
     private Vector3 GetUnitsCenter(List<BattleUnit> units)

@@ -16,14 +16,14 @@ MonoBehaviour:
   characterName: fristenemy
   characterMiniSprite: {fileID: 21300000, guid: 3bb455f8713eb48478e8db9e700b60a2, type: 3}
   characterBigSprite: {fileID: 21300000, guid: 3bb455f8713eb48478e8db9e700b60a2, type: 3}
-  characterBattleSprite: {fileID: 21300000, guid: 75fb980fddf9b4294aec095dc1a026c0, type: 3}
-  hp: 20
-  mp: 100
+  characterBattleSprite: {fileID: 21300000, guid: 92fe4e529fe72a14bad717ebc8adfeb8, type: 3}
+  hp: 100
+  mp: 0
   atk: 10
   def: 10
   exp: 0
-  level: 1
-  speed: 10
+  level: 0
+  speed: 15
   growthTable: {fileID: 0}
   skillId: 00000000
   ultimateSkillId: 0

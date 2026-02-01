@@ -30,6 +30,7 @@ public class BattleUIManager : MonoBehaviour
     [SerializeField] private Button drawButton;
     [SerializeField] private CanvasGroup generalInteractionGroup;
     [SerializeField] private TMPro.TextMeshProUGUI turnText;
+    [SerializeField] private TMPro.TextMeshProUGUI promptText; // 行動指示メッセージ用
     [SerializeField] private CanvasGroup rootCanvasGroup;
 
     [Header("Data")]
@@ -164,6 +165,7 @@ public class BattleUIManager : MonoBehaviour
         }
 
         SetInteraction(false);
+        if (promptText != null) promptText.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -177,6 +179,11 @@ public class BattleUIManager : MonoBehaviour
         skillPanelRoot.SetActive(true);
         if (turnEndButton != null) turnEndButton.gameObject.SetActive(true);
         if (drawButton != null) drawButton.gameObject.SetActive(true);
+        if (promptText != null)
+        {
+            promptText.text = "スキルを選択して発動してください";
+            promptText.gameObject.SetActive(true);
+        }
         SetInteraction(true);
         UpdateButtonsUsability(); // 初期化時に状態を反映
 
@@ -215,6 +222,7 @@ public class BattleUIManager : MonoBehaviour
         // ここでも、必殺技割り込みなどで閉じられた際にカードが消えないよう Clear() を呼ぶのをやめる
         if (turnEndButton != null) turnEndButton.gameObject.SetActive(false);
         if (drawButton != null) drawButton.gameObject.SetActive(false);
+        if (promptText != null) promptText.gameObject.SetActive(false);
         SetInteraction(false);
     }
 

@@ -33,9 +33,14 @@ public class BattleUnit : MonoBehaviour
 
         if (_spriteRenderer != null)
         {
+            Debug.Log($"[BattleUnit] Setup {data.name}: Setting sprite to {(sprite != null ? sprite.name : "NULL")} on {_spriteRenderer.gameObject.name}");
             _spriteRenderer.sprite = sprite;
             _originalSprite = sprite;
             AdjustToGround(_spriteRenderer);
+        }
+        else
+        {
+            Debug.LogError($"[BattleUnit] Setup {data.name}: No SpriteRenderer found!");
         }
 
         if (_shadowCaster != null)

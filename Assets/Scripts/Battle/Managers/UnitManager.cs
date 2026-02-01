@@ -121,6 +121,8 @@ public class UnitManager : MonoBehaviour
 
         Sprite sprite = master.characterBattleSprite != null ? master.characterBattleSprite : master.characterBigSprite;
         
+        Debug.Log($"[UnitManager] Spawning {data.name} (ID: {master.id}). IsAlly: {isAlly}. MasterType: {master.GetType().Name}. Sprite: {(sprite != null ? sprite.name : "NULL")}");
+
         battleUnit.Setup(data, sprite);
         allbattleunits.Add(data.unitId, battleUnit);
         if (isAlly) _currentAllyCount++; else _currentEnemyCount++;
