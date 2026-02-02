@@ -34,6 +34,9 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
 
     private Vector3 _startDragPosition;
 
+    public void MarkConsumed() => _isConsumed = true;
+    public void UnmarkConsumed() => _isConsumed = false;
+
     private void Awake()
     {
         // Canvasコンポーネントの準備（なければ追加）
@@ -197,14 +200,28 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
 
         if (droppedCardUI != null && droppedCardUI != this)
         {
+            // すでに消費されているカード同士での合成を防ぐ
+            if (droppedCardUI.IsConsumed || this.IsConsumed) return;
+
             var deckManager = Object.FindFirstObjectByType<EmotionDeckManager>();
             if (deckManager != null)
             {
+                // 楽観的ロック：合成処理中にUI更新が走った際、これらが「使用済み」とみなされるように先にフラグを立てる
+                droppedCardUI.MarkConsumed();
+                this.MarkConsumed();
+
                 bool success = deckManager.Synthesize(this.Data, droppedCardUI.Data);
                 if (success)
                 {
+                    // 成功したら物理的に削除
                     droppedCardUI.OnConsumedBySlot(); 
                     this.OnConsumedBySlot();
+                }
+                else
+                {
+                    // 失敗したらロック解除
+                    droppedCardUI.UnmarkConsumed();
+                    this.UnmarkConsumed();
                 }
             }
         }

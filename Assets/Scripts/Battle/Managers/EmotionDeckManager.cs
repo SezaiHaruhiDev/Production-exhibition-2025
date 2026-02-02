@@ -108,9 +108,6 @@ public class EmotionDeckManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 2つの同じカードを合成してレベルアップさせる
-    /// </summary>
     public bool Synthesize(EmotionCardData cardA, EmotionCardData cardB)
     {
         if (cardA == null || cardB == null) return false;
@@ -118,15 +115,32 @@ public class EmotionDeckManager : MonoBehaviour
         // 同じ感情かつ同じレベル、かつ次のレベルのカードが存在する場合のみ合成可能
         if (cardA.emotion == cardB.emotion && cardA.level == cardB.level && cardA.nextLevelCard != null)
         {
-            // 手札に両方が存在することを確認（同じインスタンスが複数ある場合も考慮）
-            int count = _hand.Count(c => c == cardA);
-            if (count < 2 && cardA == cardB)
+            // 手札に両方が存在することを確認
+            if (cardA == cardB)
             {
+                // 同じインスタンス（または等価なデータ）の場合は2枚以上必要
+                int count = _hand.Count(c => c == cardA);
+                if (count < 2) return false;
+            }
+            else
+            {
+                // 異なるインスタンスの場合はそれぞれが存在する必要がある
+                if (!_hand.Contains(cardA) || !_hand.Contains(cardB)) return false;
+            }
+
+            // 削除実行（念のため削除成功も確認する）
+            bool removedA = _hand.Remove(cardA);
+            bool removedB = _hand.Remove(cardB);
+
+            if (!removedA || !removedB)
+            {
+                // 削除に失敗した場合は状態不整合なので中断（ここに来ることはないはずだが安全策）
+                // 元に戻す処理などは簡易的には省略するが、Containsチェックで防げているはず
+                if (removedA) _hand.Add(cardA);
+                if (removedB) _hand.Add(cardB);
                 return false;
             }
 
-            _hand.Remove(cardA);
-            _hand.Remove(cardB);
             _hand.Add(cardA.nextLevelCard);
             
             NotifyHandChanged();
