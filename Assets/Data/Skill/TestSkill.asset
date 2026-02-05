@@ -32,6 +32,7 @@ MonoBehaviour:
       skillCategory: 0
       skillTargetType: 2
       power: 20
+    performanceOverride: {fileID: 0}
   - emotion: 0
     level: 2
     effectDataList:
@@ -40,6 +41,7 @@ MonoBehaviour:
       skillCategory: 1
       skillTargetType: 4
       power: 10
+    performanceOverride: {fileID: 0}
   - emotion: 0
     level: 3
     effectDataList:
@@ -48,3 +50,5 @@ MonoBehaviour:
       skillCategory: 2
       skillTargetType: 3
       power: 50
+    performanceOverride: {fileID: 0}
+  performanceData: {fileID: 11400000, guid: 2eba451f402c3484785352bc5df370e6, type: 2}

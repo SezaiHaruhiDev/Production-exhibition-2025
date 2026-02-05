@@ -11,6 +11,7 @@ public class UltimateGaugeController : MonoBehaviour
     [SerializeField] private Image gaugeFillImage; // Material: WaveGaugeShader
     [SerializeField] private Image gaugeGlowImage; // Optional: Additional glow layer
     [SerializeField] private CanvasGroup gaugeGroup;
+    [SerializeField] private GameObject readyIndicator; // アルティメット準備完了時に表示する画像オブジェクト
     
     [Header("Settings")]
     [SerializeField] private float fillDuration = 0.4f;
@@ -180,7 +181,13 @@ public class UltimateGaugeController : MonoBehaviour
         
         // Scale Punch looping? Or just one punch?
         // "Gauge lightly scale punch... Assert usability"
-        transform.DOScale(1.05f, 1.0f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutQuad);
+        // transform.DOScale(1.05f, 1.0f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutQuad);
+
+        // ゲージ最大時のパーティクル散布（UIEffectSpawner）
+        UIEffectSpawner.Instance?.Play();
+
+        // 準備完了インジケーターON
+        if (readyIndicator != null) readyIndicator.SetActive(true);
     }
 
     private void StopFullEffect()
@@ -196,6 +203,9 @@ public class UltimateGaugeController : MonoBehaviour
             _gaugeMaterial.DOFloat(normalWaveAmp, PropWaveAmp, 0.5f);
             _gaugeMaterial.DOFloat(normalGlow, PropGlowPower, 0.5f);
         }
+
+        // 準備完了インジケーターOFF
+        if (readyIndicator != null) readyIndicator.SetActive(false);
     }
 
 #if UNITY_EDITOR

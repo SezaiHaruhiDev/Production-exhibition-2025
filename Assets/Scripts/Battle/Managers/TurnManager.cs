@@ -415,10 +415,12 @@ public class TurnManager : MonoBehaviour
                         ConsumeMP(currentSkill.imaginationCost);
                     }
                     AddUltimateCharge(currentSkill.ultimateChargeValue);
-                    SkillExecutor.Execute(unit, selectedTargets, currentSkill, currentEmotion);
+                    
+                    // ここで非同期実行を待つ
+                    yield return StartCoroutine(SkillExecutor.ExecuteAsync(unit, selectedTargets, currentSkill, currentEmotion, presentationManager));
                 }
 
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(0.2f); // 少し短縮（演出が含まれるため）
             }
         }
         else
@@ -664,8 +666,8 @@ public class TurnManager : MonoBehaviour
         SkillData ultSkill = skillDatabaseSO.GetById(unit.Data.ultimateSkillId);
         if (ultSkill != null)
         {
-            SkillExecutor.Execute(unit, targets, ultSkill, null);
-            yield return new WaitForSeconds(1.5f * (Time.timeScale < 1.0f ? 0.1f : 1.0f)); // 演出時間を確保
+            yield return StartCoroutine(SkillExecutor.ExecuteAsync(unit, targets, ultSkill, null, presentationManager));
+            yield return new WaitForSeconds(0.2f);
         }
         unit.SetTurnActive(false);
     }

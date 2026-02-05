@@ -29,6 +29,9 @@ public class SkillData : ScriptableObject
     [Header("EmotionEffect")]
     public List<EmotionEffectSet> emotionEffectSet;
 
+    [Header("Performance")]
+    public SkillPerformanceSO performanceData;
+
     /// <summary>
     /// 感情カードを考慮した最終的なターゲットタイプを取得する
     /// </summary>
@@ -60,6 +63,22 @@ public class SkillData : ScriptableObject
             }
         }
         return new List<EffectData>();
+    }
+
+    /// <summary>
+    /// 感情カードを考慮した演出データを取得する
+    /// </summary>
+    public SkillPerformanceSO GetEffectivePerformance(EmotionCardData card)
+    {
+        if (card != null)
+        {
+            var set = emotionEffectSet.Find(s => s.emotion == card.emotion && s.level == card.level);
+            if (set != null && set.performanceOverride != null)
+            {
+                return set.performanceOverride;
+            }
+        }
+        return performanceData;
     }
 
     /// <summary>

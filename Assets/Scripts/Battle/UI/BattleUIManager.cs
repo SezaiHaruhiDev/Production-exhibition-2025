@@ -373,6 +373,7 @@ public class BattleUIManager : MonoBehaviour
     public void EnterUltimateSelectionMode()
     {
         _isInUltimateSelection = true;
+        UIEffectSpawner.Instance?.Play();
         
         // 既存の（通常ターンの）ターゲット選択をすべて解除
         if (_turnManager != null && _turnManager.UnitManager != null)

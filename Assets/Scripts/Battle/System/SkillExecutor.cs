@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -7,14 +8,40 @@ using System.Collections.Generic;
 public static class SkillExecutor
 {
     /// <summary>
-    /// スキルを実行し、対象に効果を適用する
+    /// スキルを実行し、対象に効果を適用する（非同期・演出込み）
+    /// </summary>
+    public static IEnumerator ExecuteAsync(BattleUnit actor, List<BattleUnit> targets, SkillData skill, EmotionCardData emotion, BattlePresentationManager presentation)
+    {
+        if (skill == null) yield break;
+
+        Debug.Log($"[SkillExecutor] Executing {skill.displayName} (Card: {(emotion != null ? emotion.emotionName : "None")}) on {targets.Count} targets.");
+
+        // 演出マネージャーがあれば演出を再生し、そのコールバックで効果を適用する
+        if (presentation != null)
+        {
+             yield return presentation.StartCoroutine(presentation.PlayAttackSequence(actor, targets, skill.GetEffectivePerformance(emotion), () => 
+             {
+                 ApplyEffects(actor, targets, skill, emotion);
+             }));
+        }
+        else
+        {
+            // 演出がない場合は即時適用（従来通りだが、演出がないケースは稀）
+            ApplyEffects(actor, targets, skill, emotion);
+            yield return new WaitForSeconds(0.5f); // 簡易ウェイト
+        }
+    }
+
+    /// <summary>
+    /// 旧互換用（同期実行） - 必要なら残すが、基本はAsync推奨
     /// </summary>
     public static void Execute(BattleUnit actor, List<BattleUnit> targets, SkillData skill, EmotionCardData emotion)
     {
-        if (skill == null) return;
-        
-        Debug.Log($"[SkillExecutor] Executing {skill.displayName} (Card: {(emotion != null ? emotion.emotionName : "None")}) on {targets.Count} targets.");
+        ApplyEffects(actor, targets, skill, emotion);
+    }
 
+    private static void ApplyEffects(BattleUnit actor, List<BattleUnit> targets, SkillData skill, EmotionCardData emotion)
+    {
         List<EffectData> effects = skill.GetEffectiveEffects(emotion);
 
         if (effects != null && effects.Count > 0)
@@ -82,8 +109,6 @@ public static class SkillExecutor
             target.Data.currentHp = Mathf.Max(0, target.Data.currentHp - damage); 
             target.RefreshHPBar(); 
             target.ShowDamage(damage); 
-
-
         }
     }
 
@@ -98,8 +123,6 @@ public static class SkillExecutor
             target.Data.currentHp = Mathf.Min(target.Data.maxHp, target.Data.currentHp + heal);
             target.RefreshHPBar();
             target.ShowHeal(heal);
-            
-
         }
     }
 
@@ -115,8 +138,6 @@ public static class SkillExecutor
             target.SetDown(false);
             target.RefreshHPBar();
             target.ShowHeal(heal);
-            
-
         }
     }
 }
