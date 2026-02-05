@@ -24,7 +24,7 @@ public class BattleUIManager : MonoBehaviour
 
     [Header("Shared Resources")]
     [SerializeField] private SharedMPBarUI mpBar;
-    [SerializeField] private UltimateGaugeUI ultGauge; 
+    [SerializeField] private UltimateGaugeController ultGauge; 
     [SerializeField] private Button ultimateButton;
     [SerializeField] private Button turnEndButton;
     [SerializeField] private Button drawButton;
@@ -166,6 +166,18 @@ public class BattleUIManager : MonoBehaviour
 
         SetInteraction(false);
         if (promptText != null) promptText.gameObject.SetActive(false);
+    }
+
+    private void Start()
+    {
+        if (_turnManager != null)
+        {
+            // 初期表示の同期
+            if (mpBar != null) mpBar.UpdateView(_turnManager.BattleCurrentMP, _turnManager.BattleMaxMP);
+            if (ultGauge != null) ultGauge.UpdateView(_turnManager.BattleUltimateGauge, 100f);
+            
+            UpdateButtonsUsability();
+        }
     }
 
     /// <summary>
