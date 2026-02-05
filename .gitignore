@@ -29,4 +29,5 @@
 # OS generated
 .DS_Store
 .DS_Store?
-._*
+._**.blob
+*.blob
