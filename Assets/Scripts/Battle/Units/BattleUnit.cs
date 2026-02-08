@@ -273,4 +273,24 @@ public class BattleUnit : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// スプライトの透明度を設定する（攻撃演出時のフォーカス用）
+    /// </summary>
+    public void SetAlpha(float alpha)
+    {
+        if (_spriteRenderer != null)
+        {
+            Color c = _spriteRenderer.color;
+            c.a = alpha;
+            _spriteRenderer.color = c;
+        }
+
+        if (_shadowCaster != null)
+        {
+            Color sc = _shadowCaster.color;
+            sc.a = alpha;
+            _shadowCaster.color = sc;
+        }
+    }
 }

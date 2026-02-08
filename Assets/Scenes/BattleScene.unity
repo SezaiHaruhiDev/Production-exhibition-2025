@@ -252,7 +252,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b61c824e0f65e04788e689b0d8ba420, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Common.UI.ButtonAnimation
-  target: {fileID: 0}
+  target: {fileID: 24551669}
   pressedScale: 0.9
   speed: 10
 --- !u!1 &94292486
@@ -2413,13 +2413,13 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 951430731}
   - {fileID: 731352659}
   - {fileID: 358174311}
   - {fileID: 2000978015}
   - {fileID: 1784051507}
   - {fileID: 762954158}
   - {fileID: 2030544142}
-  - {fileID: 951430731}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3979,14 +3979,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e8a9ee0f57952341bf0ebe2ac94035e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattlePresentationManager
-  _virtualCamera: {fileID: 0}
-  _impulseSource: {fileID: 0}
-  _attackerFocusHeight: 0
-  _targetFocusHeight: 0
-  _anticipationZoomDistance: 0
-  _anticipationHeightOffset: 0
-  _defaultFOV: 80
-  _zoomFOV: 30
   _uiManager: {fileID: 474040234}
   _unitManager: {fileID: 1180543812}
 --- !u!4 &2138052090
