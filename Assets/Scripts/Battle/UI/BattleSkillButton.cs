@@ -5,9 +5,6 @@ using UnityEngine.EventSystems;
 /// <summary>
 /// スキル選択ボタン（ドロップ受け入れ機能付き）
 /// </summary>
-/// <summary>
-/// スキル選択ボタン
-/// </summary>
 public class BattleSkillButton : MonoBehaviour
 {
     [SerializeField] private Button button;
@@ -15,6 +12,7 @@ public class BattleSkillButton : MonoBehaviour
 
     private SkillData _currentSkill;
     private BattleUIManager _manager;
+    private TurnManager _turnManager;
 
     /// <summary>
     /// 初期化処理
@@ -22,6 +20,7 @@ public class BattleSkillButton : MonoBehaviour
     public void Initialize(BattleUIManager manager)
     {
         _manager = manager;
+        _turnManager = Object.FindFirstObjectByType<TurnManager>();
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(OnClicked);
     }
@@ -51,7 +50,7 @@ public class BattleSkillButton : MonoBehaviour
 
         gameObject.SetActive(true);
         
-        int currentMP = Object.FindFirstObjectByType<TurnManager>()?.BattleCurrentMP ?? 0;
+        int currentMP = _turnManager?.BattleCurrentMP ?? 0;
         UpdateUsability(currentMP);
     }
 

@@ -10,7 +10,10 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
 {
     [SerializeField] private Image _iconImage;
     [SerializeField] private CanvasGroup _canvasGroup;
+    [Header("Empty State")]
     [SerializeField] private GameObject _visualRoot; // カード表示部分のルート
+    [SerializeField] private Sprite _emptySlotSprite; // カードがない時に表示する画像
+    [SerializeField] private Color _emptyColor = new Color(1, 1, 1, 0.5f); // 空の時の色（少し薄くするなど）
 
     public EmotionCardData CurrentCard { get; private set; }
     public System.Action<EmotionCardData> OnCardSet;     // カードがセットされた時
@@ -30,7 +33,6 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
         if (cardUI != null)
         {
             // 重要：先にカードを「消費済み」としてマークし、UIオブジェクトを非アクティブにする。
-            // これにより、この後のOnCardRemoved等で走るUpdateHandViewが、このUIを「手札にあるカード」と誤認するのを防ぐ。
             var cardData = cardUI.Data;
             cardUI.OnConsumedBySlot();
 
@@ -75,7 +77,22 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
     public void Clear()
     {
         CurrentCard = null;
-        if (_visualRoot != null) _visualRoot.SetActive(false);
-        if (_iconImage != null) _iconImage.sprite = null;
+        
+        if (_emptySlotSprite != null)
+        {
+            // 空スロット用の画像がある場合は、ルートを表示したまま画像だけ差し替える
+            if (_visualRoot != null) _visualRoot.SetActive(true);
+            if (_iconImage != null)
+            {
+                _iconImage.sprite = _emptySlotSprite;
+                _iconImage.color = _emptyColor;
+            }
+        }
+        else
+        {
+            // 空スロット用の画像がない場合は、従来通り非表示にする
+            if (_visualRoot != null) _visualRoot.SetActive(false);
+            if (_iconImage != null) _iconImage.sprite = null;
+        }
     }
 }

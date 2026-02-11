@@ -208,13 +208,21 @@ public class UltimateGaugeController : MonoBehaviour
         if (readyIndicator != null) readyIndicator.SetActive(false);
     }
 
-#if UNITY_EDITOR
-    private void OnValidate()
+    private void Update()
     {
-        if (Application.isPlaying)
+#if UNITY_EDITOR
+        // エディタ再生中にインスペクターの debugValue を動かした時だけ反応させる
+        if (Application.isPlaying && debugValue != _currentValue)
         {
             UpdateView(debugValue, 100);
         }
+#endif
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // ここでは何もしない、または DOTween を含まない即時更新のみを行う
     }
 #endif
 }

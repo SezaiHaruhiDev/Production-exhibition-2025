@@ -16,7 +16,7 @@ MonoBehaviour:
   characterName: Robin
   characterMiniSprite: {fileID: 21300000, guid: 064704e60c2b44f48b9997adcaea300e, type: 3}
   characterBigSprite: {fileID: 21300000, guid: 8cca1682e249d44848573b6857596561, type: 3}
-  characterBattleSprite: {fileID: 21300000, guid: 75fb980fddf9b4294aec095dc1a026c0, type: 3}
+  characterBattleSprite: {fileID: 21300000, guid: 16b45b30b004cb749986f4a58fb52775, type: 3}
   hp: 10
   mp: 100
   atk: 10

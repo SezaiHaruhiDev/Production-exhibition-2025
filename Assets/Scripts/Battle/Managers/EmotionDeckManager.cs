@@ -57,8 +57,6 @@ public class EmotionDeckManager : MonoBehaviour
             _deck.Enqueue(card);
         }
 
-
-
         Draw(initialDrawCount);
     }
 
@@ -195,7 +193,6 @@ public class EmotionDeckManager : MonoBehaviour
     private void ReshuffleDiscardToDeck()
     {
         if (_discard.Count == 0) return;
-
 
         ShuffleList(_discard);
         foreach (var card in _discard)

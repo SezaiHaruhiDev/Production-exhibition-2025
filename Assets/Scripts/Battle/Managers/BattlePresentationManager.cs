@@ -18,11 +18,6 @@ public class BattlePresentationManager : MonoBehaviour
         if (_unitManager == null) _unitManager = FindFirstObjectByType<UnitManager>();
     }
 
-    private void Start()
-    {
-        // カメラセットアップ処理を削除
-    }
-
     /// <summary>
     /// 戦闘開始時のカメラ演出（無効化）
     /// </summary>
@@ -36,21 +31,13 @@ public class BattlePresentationManager : MonoBehaviour
     /// <summary>
     /// 攻撃演出（カメラワークなし・タイミングとエフェクトのみ）
     /// </summary>
-    public IEnumerator PlayAttackSequence(BattleUnit attacker, List<BattleUnit> targets, SkillPerformanceSO performanceData, System.Action onImpact)
+    public IEnumerator PlayAttackSequence(BattleUnit attacker, List<BattleUnit> targets, System.Action onImpact)
     {
-        // パラメータ取得
-        float antDuration = performanceData != null ? performanceData.anticipationDuration : 0.4f;
-        float actionMoveDuration = performanceData != null ? performanceData.actionMovementDuration : 0.15f;
-        float hitStopDur = performanceData != null ? performanceData.hitStopDuration : 0.15f;
-        float recoveryDelay = performanceData != null ? performanceData.recoveryDelay : 0.5f;
-
-        Vector3 targetCenter = GetUnitsCenter(targets);
-
-        // --- 0. Start Effect ---
-        if (performanceData != null && performanceData.startEffectPrefab != null)
-        {
-            SpawnEffect(performanceData.startEffectPrefab, attacker.transform.position, performanceData.effectScale);
-        }
+        // パラメータはとりあえず固定値
+        float antDuration = 0.4f;
+        float actionMoveDuration = 0.15f;
+        float hitStopDur = 0.15f;
+        float recoveryDelay = 0.5f;
 
         // --- 透明化処理（行動者とターゲット以外を半透明に） ---
         SetOtherUnitsTransparency(attacker, targets, 0.3f);
@@ -59,19 +46,12 @@ public class BattlePresentationManager : MonoBehaviour
         yield return new WaitForSeconds(antDuration);
 
         // --- 2. Action (Wait) ---
-        // カメラ移動がないので、単に待つ
         yield return new WaitForSeconds(actionMoveDuration);
 
         // --- 3. Impact ---
         onImpact?.Invoke();
 
-        // Hit Effect
-        if (performanceData != null && performanceData.hitEffectPrefab != null)
-        {
-            SpawnEffect(performanceData.hitEffectPrefab, targetCenter, performanceData.effectScale);
-        }
-
-        // Hit Stop (Time Scale操作) は演出として残す（不要なら削除可）
+        // Hit Stop
         yield return StartCoroutine(HitStopRoutine(hitStopDur));
         
         // Recovery Wait
@@ -108,22 +88,41 @@ public class BattlePresentationManager : MonoBehaviour
         Time.timeScale = originalTimeScale;
     }
 
-    private void SetOtherUnitsTransparency(BattleUnit attacker, List<BattleUnit> targets, float alpha)
+    /// <summary>
+    /// 指定したユニット（行動者やターゲット）以外を半透明にする
+    /// </summary>
+    public void SetOtherUnitsTransparency(BattleUnit attacker, List<BattleUnit> targets, float alpha)
     {
         if (_unitManager == null || _unitManager.AllUnits == null) return;
 
         foreach (var unit in _unitManager.AllUnits)
         {
             // 攻撃者でもターゲットでもないユニットを対象にする
-            if (unit != attacker && (targets == null || !targets.Contains(unit)))
+            // targetsがnullの場合はattacker以外が半透明になる
+            bool isHighlight = (unit == attacker) || (targets != null && targets.Contains(unit));
+
+            if (!isHighlight)
             {
                 unit.SetAlpha(alpha);
             }
             else
             {
-                // 対象者は不透明に戻す（演出終了時用、または念のため）
                 unit.SetAlpha(1.0f);
             }
+        }
+    }
+
+    /// <summary>
+    /// ターゲット選択時に、行動者と「選択候補」以外を半透明にする
+    /// </summary>
+    public void SetTargetCandidatesTransparency(BattleUnit attacker, List<BattleUnit> candidates, float unselectedAlpha)
+    {
+        if (_unitManager == null || _unitManager.AllUnits == null) return;
+
+        foreach (var unit in _unitManager.AllUnits)
+        {
+            bool isHighlight = (unit == attacker) || (candidates != null && candidates.Contains(unit));
+            unit.SetAlpha(isHighlight ? 1.0f : unselectedAlpha);
         }
     }
 }

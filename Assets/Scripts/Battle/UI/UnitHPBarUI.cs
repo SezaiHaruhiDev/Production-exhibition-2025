@@ -7,9 +7,25 @@ using DG.Tweening;
 /// </summary>
 public class UnitHPBarUI : MonoBehaviour
 {
+    [System.Serializable]
+    public struct HPBarSprites
+    {
+        public Sprite background;
+        public Sprite mask;
+        public Sprite fill;
+    }
+
     [Header("References")]
+    [SerializeField] private Image backgroundImage;
+    [SerializeField] private Image maskImage;
     [SerializeField] private Image fillImage;
+    [Header("Positioning")]
+    [SerializeField] private Vector3 positionOffset = new Vector3(0, 0.1f, 0);
     [SerializeField] private float animationDuration = 0.2f;
+
+    [Header("Side Config")]
+    [SerializeField] private HPBarSprites allySprites;
+    [SerializeField] private HPBarSprites enemySprites;
 
     private float _fullWidth;
     private bool _isInitialized = false;
@@ -36,11 +52,25 @@ public class UnitHPBarUI : MonoBehaviour
         RectTransform rt = GetComponent<RectTransform>();
         if (rt != null)
         {
-            rt.localPosition = new Vector3(0, 0.1f, 0); // 地面より少しだけ浮かせる
+            rt.localPosition = positionOffset; // 設定されたオフセットを使用
             rt.localScale = Vector3.one * 0.01f;
         }
 
         _isInitialized = true;
+    }
+
+    /// <summary>
+    /// 味方か敵かに応じた見た目に切り替える
+    /// </summary>
+    public void SetSide(bool isAlly)
+    {
+        if (!_isInitialized) Initialize();
+
+        HPBarSprites sprites = isAlly ? allySprites : enemySprites;
+
+        if (backgroundImage != null && sprites.background != null) backgroundImage.sprite = sprites.background;
+        if (maskImage != null && sprites.mask != null) maskImage.sprite = sprites.mask;
+        if (fillImage != null && sprites.fill != null) fillImage.sprite = sprites.fill;
     }
 
     private void LateUpdate()

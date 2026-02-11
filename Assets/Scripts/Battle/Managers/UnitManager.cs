@@ -26,7 +26,7 @@ public class UnitManager : MonoBehaviour
     /// <summary>
     /// 生成された全てのユニットリスト
     /// </summary>
-    public List<BattleUnit> AllUnits => new List<BattleUnit>(allbattleunits.Values);
+    public IEnumerable<BattleUnit> AllUnits => allbattleunits.Values;
 
     /// <summary>
     /// 現在生存している全ユニットリスト

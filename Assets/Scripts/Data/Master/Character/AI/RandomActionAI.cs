@@ -72,9 +72,7 @@ public class RandomActionAI : EnemyLogicSO
         // 実行
         Debug.Log($"Enemy Action: {skill.displayName} on {string.Join(",", targets.Select(t => t.Data.name))}");
         
-        // 演出用ウェイト
-        yield return new WaitForSeconds(0.5f);
-
-        SkillExecutor.Execute(actor, targets, skill, null);
+        // 非同期（演出込み）で実行
+        yield return turnManager.StartCoroutine(SkillExecutor.ExecuteAsync(actor, targets, skill, null, turnManager.PresentationManager));
     }
 }

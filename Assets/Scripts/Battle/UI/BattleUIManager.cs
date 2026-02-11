@@ -9,7 +9,6 @@ using System.Linq;
 public class BattleUIManager : MonoBehaviour
 {
     [Header("Skill Panel")]
-    [Header("Skill Panel")]
     [SerializeField] private List<BattleSkillButton> skillButtons;
     [SerializeField] private GameObject skillPanelRoot;
 
@@ -388,18 +387,23 @@ public class BattleUIManager : MonoBehaviour
         skillPanelRoot.SetActive(false); // HideSkillPanel()の代わりに直接消す（Clearを避けるため）
 
         // 味方を選択可能にする
+        List<BattleUnit> allies = new List<BattleUnit>();
         foreach (var unit in _turnManager.UnitManager.AllUnits)
         {
             if (unit.Data.isAlly && unit.Data.currentHp > 0)
             {
                 unit.SetSelectable(true);
                 unit.OnSelected += OnUltimateUnitSelected;
+                allies.Add(unit);
             }
             else
             {
                 unit.SetSelectable(false);
             }
         }
+
+        // アルティメット発動者選択の演出（味方全員を強調）
+        _turnManager.PresentationManager?.SetTargetCandidatesTransparency(null, allies, 0.3f);
     }
 
     private void OnUltimateUnitSelected(BattleUnit unit)
@@ -440,7 +444,7 @@ public class BattleUIManager : MonoBehaviour
         }
 
         // 全てのターゲットタイプにおいて、「クリックによる決定」を必須にする。
-        // これにより、範囲攻撃や自分自身への効果も、ユーザーが対象を確認してクリックした瞬間に発動するようになる。
+        List<BattleUnit> candidates = new List<BattleUnit>();
         foreach (var unit in _turnManager.UnitManager.AllUnits)
         {
             bool isSelectable = false;
@@ -464,8 +468,12 @@ public class BattleUIManager : MonoBehaviour
             {
                 // 「クリックされたら、そのターゲットタイプに応じた全対象に実行する」というロジックにする
                 unit.OnSelected += OnUltimateTargetSelected;
+                candidates.Add(unit);
             }
         }
+
+        // アルティメットのターゲット選択演出
+        _turnManager.PresentationManager?.SetTargetCandidatesTransparency(actor, candidates, 0.3f);
     }
 
     private void OnUltimateTargetSelected(BattleUnit clickedTarget)
@@ -530,8 +538,12 @@ public class BattleUIManager : MonoBehaviour
         _tempUltimateActor = null;
         _tempUltimateSkill = null;
         
-        // 通常のスキルパネルなどは、TurnManager側のCancelから復帰する際に
-        // 自然と再表示されるか、必要ならここで制御しても良い
+        // 演出のリセット：通常の行動キャラ強調に戻す
+        var actor = _turnManager.ActiveUnit;
+        if (actor != null)
+        {
+            _turnManager.PresentationManager?.SetOtherUnitsTransparency(actor, null, 0.3f);
+        }
     }
 
     /// <summary>

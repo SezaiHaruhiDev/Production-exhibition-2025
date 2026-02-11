@@ -59,6 +59,8 @@ public class TurnManager : MonoBehaviour
     private const int SKIP_TURN_MP_RECOVERY = 20;
 
     public UnitManager UnitManager => unitManager;
+    public BattlePresentationManager PresentationManager => presentationManager;
+    public BattleUnit ActiveUnit { get; private set; }
 
 
     public event System.Action<int, int> OnMPChanged;
@@ -192,9 +194,6 @@ public class TurnManager : MonoBehaviour
 
     private IEnumerator RunBattleLoop()
     {
-        // const float GOAL = 100000f; // Replaced by ACTION_GAUGE_GOAL
-
-
         // 初期ターン通知
         OnTurnCountChanged?.Invoke(_currentTurnCount);
 
@@ -281,6 +280,7 @@ public class TurnManager : MonoBehaviour
 
     private IEnumerator UnitTurn(BattleUnit unit)
     {
+        ActiveUnit = unit;
         unit.SetTurnActive(true);
         _skipTurnRequested = false;
         while (_isInterrupting) yield return null;
@@ -289,6 +289,9 @@ public class TurnManager : MonoBehaviour
         if (unit.Data.isAlly)
         {
             state = BattleState.PlayerTurn;
+
+            // 行動キャラ以外を半透明にする（フォーカス演出）
+            if (presentationManager != null) presentationManager.SetOtherUnitsTransparency(unit, null, 0.3f);
 
             if (deckManager != null)
             {
@@ -430,6 +433,9 @@ public class TurnManager : MonoBehaviour
         {
             state = BattleState.EnemyTurn;
             
+            // 敵ターン時も行動キャラを強調
+            if (presentationManager != null) presentationManager.SetOtherUnitsTransparency(unit, null, 0.3f);
+
             var master = registry.GetById(unit.Data.characterId) as EnemyMasterSO;
             if (master != null && master.aiLogic != null)
             {
@@ -444,7 +450,12 @@ public class TurnManager : MonoBehaviour
 
         // ターン終了時にスロットに残っている場合は手札に戻す
         if (battleUI != null) battleUI.ResetSlotToHand();
+
+        // 透明化を解除して全員不透明に戻す
+        if (presentationManager != null) presentationManager.SetOtherUnitsTransparency(null, null, 1.0f);
+
         unit.SetTurnActive(false);
+        ActiveUnit = null;
     }
 
     /// <summary>
@@ -469,7 +480,7 @@ public class TurnManager : MonoBehaviour
         if (skill != null && active)
         {
             SkillTargetType effectiveType = skill.GetEffectiveTargetType(card);
-
+            List<BattleUnit> candidates = new List<BattleUnit>();
 
             foreach (var unit in unitManager.AllUnits)
             {
@@ -483,14 +494,9 @@ public class TurnManager : MonoBehaviour
                     case SkillTargetType.SingleEnemy:
                     case SkillTargetType.AllEnemies:
                         isSelectable = !unit.Data.isAlly;
-                        
-                        
-                        
                         break;
                     case SkillTargetType.AllAllies:
                          isSelectable = unit.Data.isAlly;
-                         
-                         
                          break;
                     case SkillTargetType.SingleAlly:
                          isSelectable = unit.Data.isAlly;
@@ -501,7 +507,14 @@ public class TurnManager : MonoBehaviour
                 if (isSelectable)
                 {
                     unit.OnSelected += OnUnitClicked;
+                    candidates.Add(unit);
                 }
+            }
+
+            // ターゲット選択モードの演出（行動者と候補のみ強調）
+            if (presentationManager != null)
+            {
+                presentationManager.SetTargetCandidatesTransparency(actor, candidates, 0.3f);
             }
         }
         else
@@ -510,6 +523,13 @@ public class TurnManager : MonoBehaviour
             {
                 unit.OnSelected -= OnUnitClicked;
                 unit.SetSelectable(false);
+            }
+
+            // キャンセル時または決定時：元の「行動キャラのみ強調」状態に戻す
+            // すでにターン終了している場合は、外側のロジックで1.0に戻される
+            if (state == BattleState.PlayerTurn && presentationManager != null && actor != null)
+            {
+                presentationManager.SetOtherUnitsTransparency(actor, null, 0.3f);
             }
         }
     }
@@ -562,7 +582,6 @@ public class TurnManager : MonoBehaviour
                 battleCurrentMp += unit.Data.currentMp;
             }
         }
-
 
         OnMPChanged?.Invoke(battleCurrentMp, battleMaxMp);
     }

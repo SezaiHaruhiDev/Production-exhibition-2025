@@ -59,7 +59,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
         Data = data;
         if (emotionNameText != null)
         {
-            emotionNameText.text = data.emotionName;
+            emotionNameText.text = ""; // 名前を表示しないようにクリア
         }
 
         if (cardIcon != null && data.cardSprite != null)

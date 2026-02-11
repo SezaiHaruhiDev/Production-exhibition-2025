@@ -78,8 +78,8 @@ public class HandLayoutGroup : MonoBehaviour
             if (card != null && Application.isPlaying)
             {
                 // 再生中はカード側の補間アニメーションに任せる
-                // 重なり順（基本は左から順）を考慮した基本のソートオーダーも渡せるようにするならここ
-                card.SetLayoutPosition(new Vector3(x, y, 0), Quaternion.Euler(0, 0, rotZ), i);
+                // 重なり順（基本は左から順）を考慮した基本のソートオーダーを10から開始するように底上げ
+                card.SetLayoutPosition(new Vector3(x, y, 0), Quaternion.Euler(0, 0, rotZ), 10 + i);
             }
             else
             {
