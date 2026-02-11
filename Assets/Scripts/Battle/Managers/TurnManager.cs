@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Assertions;
 using System.Linq;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// ターン制戦闘の管理
@@ -514,16 +515,18 @@ public class TurnManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.N))
+        if (Keyboard.current == null) return;
+
+        if (Keyboard.current.nKey.wasPressedThisFrame)
         {
             ConsumeMP(100);
         }
-        if (Input.GetKeyDown(KeyCode.P))
+        if (Keyboard.current.pKey.wasPressedThisFrame)
         {
             AddMP(100);
         }
 
-        if (Input.GetKeyDown(KeyCode.H))
+        if (Keyboard.current.hKey.wasPressedThisFrame)
         {
             foreach (var unit in unitManager.AllUnits.Where(u => u.Data.isAlly))
             {
@@ -533,7 +536,7 @@ public class TurnManager : MonoBehaviour
             }
             Debug.Log("Debug: Allies HP -10");
         }
-        if (Input.GetKeyDown(KeyCode.J))
+        if (Keyboard.current.jKey.wasPressedThisFrame)
         {
             foreach (var unit in unitManager.AllUnits.Where(u => u.Data.isAlly))
             {

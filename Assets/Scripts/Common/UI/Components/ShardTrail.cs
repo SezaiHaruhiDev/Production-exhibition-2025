@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.Assertions;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// タッチ/クリック時にパーティクル風のエフェクトを生成
@@ -32,13 +33,16 @@ public class ShardTrail : MonoBehaviour
 
     private void Update()
     {
-        bool isPointerDown = Input.GetMouseButtonDown(0);
-        bool isPointerUp = Input.GetMouseButtonUp(0);
-        bool isPointerHeld = Input.GetMouseButton(0);
+        var pointer = Pointer.current;
+        if (pointer == null) return;
+
+        bool isPointerDown = pointer.press.wasPressedThisFrame;
+        bool isPointerUp = pointer.press.wasReleasedThisFrame;
+        bool isPointerHeld = pointer.press.isPressed;
 
         if (isPointerDown)
         {
-            Vector2 pos = ScreenToCanvasPos(Input.mousePosition);
+            Vector2 pos = ScreenToCanvasPos(pointer.position.ReadValue());
             SpawnShardLarge3(pos);
             SpawnCircle(pos);
             _lastSpawnPos = pos;
@@ -47,7 +51,7 @@ public class ShardTrail : MonoBehaviour
 
         if (_isDragging && isPointerHeld)
         {
-            Vector2 pos = ScreenToCanvasPos(Input.mousePosition);
+            Vector2 pos = ScreenToCanvasPos(pointer.position.ReadValue());
             if (Vector2.Distance(pos, _lastSpawnPos) >= spawnDistance)
             {
                 SpawnShard(pos);
