@@ -67,6 +67,7 @@ public class TurnManager : MonoBehaviour
 
     [Header("Time Based Turn")]
     [SerializeField] private float avPerTurn = 1000f; // 1000行動値ごとに1ターンとカウントする
+    public const float ACTION_GAUGE_GOAL = 100000f;
     private float _totalAV = 0f;
     private int _currentTurnCount = 1;
 
@@ -191,7 +192,8 @@ public class TurnManager : MonoBehaviour
 
     private IEnumerator RunBattleLoop()
     {
-        const float GOAL = 100000f;
+        // const float GOAL = 100000f; // Replaced by ACTION_GAUGE_GOAL
+
 
         // 初期ターン通知
         OnTurnCountChanged?.Invoke(_currentTurnCount);
@@ -215,7 +217,7 @@ public class TurnManager : MonoBehaviour
             if (activeUnits.Count == 0) yield break; 
 
             // 一番早くターンが回ってくるまでの時間（Action Value）を計算
-            float minTime = activeUnits.Min(u => u.Data.GetRemainingTime(GOAL));
+            float minTime = activeUnits.Min(u => u.Data.GetRemainingTime(ACTION_GAUGE_GOAL));
             
             // 時間を進める
             foreach (var unit in activeUnits)
@@ -236,7 +238,7 @@ public class TurnManager : MonoBehaviour
             // 目標値に達したユニットを探す
             // 複数いる場合は、目標値を「より大きく超えた（=溢れた）」順に処理する
             var readyUnits = activeUnits
-                .Where(u => u.Data.currentActionGauge >= GOAL - 0.01f)
+                .Where(u => u.Data.currentActionGauge >= ACTION_GAUGE_GOAL - 0.01f)
                 .OrderByDescending(u => u.Data.currentActionGauge)
                 .ToList();
 
@@ -249,7 +251,7 @@ public class TurnManager : MonoBehaviour
                 yield return StartCoroutine(UnitTurn(actionCharacter));
                 
                 // 目標値を「引く」ことで、オーバーした分の速度を次回のターンに持ち越す
-                actionCharacter.Data.currentActionGauge -= GOAL;
+                actionCharacter.Data.currentActionGauge -= ACTION_GAUGE_GOAL;
             }
 
             yield return null; // Safety yield to prevent infinite loop/freeze

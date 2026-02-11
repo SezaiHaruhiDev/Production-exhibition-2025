@@ -20,6 +20,7 @@ public class BattleUnit : MonoBehaviour
     private Sprite _originalSprite;
 
     public UnitCharacter Data { get; private set; }
+    public Sprite UnitSprite => _spriteRenderer != null ? _spriteRenderer.sprite : null;
 
     /// <summary>
     /// ユニットの初期設定を行い、指定された画像を表示する
