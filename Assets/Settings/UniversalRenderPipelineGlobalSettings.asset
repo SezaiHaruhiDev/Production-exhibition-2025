@@ -85,8 +85,6 @@ MonoBehaviour:
       - rid: 7522968025670615305
       - rid: 7522968025670615306
       - rid: 7522968025670615307
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
       - rid: 9093798139416018944
       - rid: 9093798139416018945
       - rid: 9093798139416018946
@@ -106,20 +104,6 @@ MonoBehaviour:
       - rid: 7522968025670615303
       - rid: 7522968025670615304
       - rid: 7522968025670615305
-=======
-      - rid: 1048706758361219072
-      - rid: 1048706758361219073
-      - rid: 1048706758361219074
-    m_RuntimeSettings:
-      m_List: []
->>>>>>> Stashed changes
-=======
-      - rid: 1048706758361219072
-      - rid: 1048706758361219073
-      - rid: 1048706758361219074
-    m_RuntimeSettings:
-      m_List: []
->>>>>>> Stashed changes
   m_AssetVersion: 9
   m_ObsoleteDefaultVolumeProfile: {fileID: 0}
   m_RenderingLayerNames:
