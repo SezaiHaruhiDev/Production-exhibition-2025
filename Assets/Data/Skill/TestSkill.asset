@@ -32,7 +32,6 @@ MonoBehaviour:
       skillCategory: 0
       skillTargetType: 2
       power: 20
-    performanceOverride: {fileID: 0}
   - emotion: 0
     level: 2
     effectDataList:
@@ -41,7 +40,6 @@ MonoBehaviour:
       skillCategory: 1
       skillTargetType: 4
       power: 10
-    performanceOverride: {fileID: 0}
   - emotion: 0
     level: 3
     effectDataList:
@@ -50,5 +48,6 @@ MonoBehaviour:
       skillCategory: 2
       skillTargetType: 3
       power: 50
-    performanceOverride: {fileID: 0}
-  performanceData: {fileID: 11400000, guid: 2eba451f402c3484785352bc5df370e6, type: 2}
+  effectPrefab: {fileID: 3610342069679686395, guid: 522db79ea9834f74992cca3485c9baf3, type: 3}
+  hitImpactDelay: 0.3
+  effectYOffset: 3

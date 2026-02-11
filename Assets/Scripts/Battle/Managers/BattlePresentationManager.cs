@@ -29,35 +29,54 @@ public class BattlePresentationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 攻撃演出（カメラワークなし・タイミングとエフェクトのみ）
+    /// 攻撃演出（連番エフェクト、ノックバック、タイミング調整込み）
     /// </summary>
-    public IEnumerator PlayAttackSequence(BattleUnit attacker, List<BattleUnit> targets, System.Action onImpact)
+    public IEnumerator PlayAttackSequence(BattleUnit attacker, List<BattleUnit> targets, GameObject effectPrefab, float hitDelay, float yOffset, System.Action onImpact)
     {
-        // パラメータはとりあえず固定値
-        float antDuration = 0.4f;
-        float actionMoveDuration = 0.15f;
-        float hitStopDur = 0.15f;
-        float recoveryDelay = 0.5f;
+        // 演出用パラメータ
+        float antDuration = 0.2f;      // 攻撃前の溜め
+        float recoveryDelay = 0.6f;    // 攻撃後の余韻
 
-        // --- 透明化処理（行動者とターゲット以外を半透明に） ---
+        // --- 透明化処理（フォーカス） ---
         SetOtherUnitsTransparency(attacker, targets, 0.3f);
 
-        // --- 1. Anticipation (Wait) ---
+        // --- 1. 予備動作 ---
         yield return new WaitForSeconds(antDuration);
 
-        // --- 2. Action (Wait) ---
-        yield return new WaitForSeconds(actionMoveDuration);
+        // --- 2. エフェクト生成 ---
+        if (effectPrefab != null)
+        {
+            // 各ターゲットの座標にそれぞれエフェクトを生成する
+            foreach (var t in targets)
+            {
+                if (t != null)
+                {
+                    // 指定されたオフセット高さに出るように調整
+                    Vector3 spawnPos = t.transform.position + new Vector3(0, yOffset, -0.1f);
+                    SpawnEffect(effectPrefab, spawnPos, 1.0f);
+                }
+            }
+        }
 
-        // --- 3. Impact ---
+        // --- 3. 被弾タイミングまでの待ち ---
+        yield return new WaitForSeconds(hitDelay);
+
+        // --- 4. インパクト（ダメージ発生） ---
         onImpact?.Invoke();
 
-        // Hit Stop
-        yield return StartCoroutine(HitStopRoutine(hitStopDur));
+        // ノックバック演出
+        foreach (var t in targets)
+        {
+            if (t != null) t.PlayKnockback();
+        }
+
+        // ヒットストップ（短く）
+        yield return StartCoroutine(HitStopRoutine(0.1f));
         
-        // Recovery Wait
+        // recovery
         yield return new WaitForSeconds(recoveryDelay);
 
-        // --- 透明化解除 ---
+        // --- 演出終了：透明化解除 ---
         SetOtherUnitsTransparency(attacker, targets, 1.0f);
     }
 
@@ -66,6 +85,15 @@ public class BattlePresentationManager : MonoBehaviour
         if (prefab == null) return;
         var effect = Instantiate(prefab, position, Quaternion.identity);
         effect.transform.localScale = Vector3.one * scale;
+
+        // レイヤーを最前面の "Effect" に設定
+        var sr = effect.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.sortingLayerName = "Effect";
+            sr.sortingOrder = 100; //念のためオーダーも高くする
+        }
+
         Destroy(effect, 3.0f);
     }
 

@@ -19,10 +19,14 @@ public static class SkillExecutor
         // 演出マネージャーがあれば演出を再生し、そのコールバックで効果を適用する
         if (presentation != null)
         {
-             yield return presentation.StartCoroutine(presentation.PlayAttackSequence(actor, targets, () => 
-             {
-                 ApplyEffects(actor, targets, skill, emotion);
-             }));
+             yield return presentation.StartCoroutine(presentation.PlayAttackSequence(
+                 actor, 
+                 targets, 
+                 skill.effectPrefab, 
+                 skill.hitImpactDelay, 
+                 skill.effectYOffset,
+                 () => { ApplyEffects(actor, targets, skill, emotion); }
+             ));
         }
         else
         {

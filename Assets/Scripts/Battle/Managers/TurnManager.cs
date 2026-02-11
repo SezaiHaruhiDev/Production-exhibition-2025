@@ -199,18 +199,7 @@ public class TurnManager : MonoBehaviour
 
         while (state != BattleState.Won && state != BattleState.Lost)
         {
-            // RunBattleLoopからは必殺技の直接実行を削除（UltimateInterruptionProcessorが担当）
-
-            if (_currentVictoryCondition != null)
-            {
-                BattleState result = _currentVictoryCondition.CheckVictory(this);
-                if (result != BattleState.Start)
-                {
-                    state = result;
-                    EndBattle();
-                    yield break;
-                }
-            }
+            if (CheckBattleOver()) yield break;
 
             var activeUnits = unitManager.ActiveUnits;
             if (activeUnits.Count == 0) yield break; 
@@ -243,7 +232,7 @@ public class TurnManager : MonoBehaviour
 
             foreach (var actionCharacter in readyUnits)
             {
-                if (state == BattleState.Won || state == BattleState.Lost) break;
+                if (CheckBattleOver()) yield break;
                 if (!unitManager.ActiveUnits.Contains(actionCharacter)) continue; // 途中で死亡した場合など
 
                 while (_isInterrupting) yield return null;
@@ -255,6 +244,23 @@ public class TurnManager : MonoBehaviour
 
             yield return null; // Safety yield to prevent infinite loop/freeze
         }
+    }
+
+    private bool CheckBattleOver()
+    {
+        if (state == BattleState.Won || state == BattleState.Lost) return true;
+
+        if (_currentVictoryCondition != null)
+        {
+            BattleState result = _currentVictoryCondition.CheckVictory(this);
+            if (result != BattleState.Start)
+            {
+                state = result;
+                EndBattle();
+                return true;
+            }
+        }
+        return false;
     }
 
     private void EndBattle()
@@ -670,6 +676,9 @@ public class TurnManager : MonoBehaviour
                 var action = _ultimateQueue.Dequeue();
                 yield return StartCoroutine(ExecuteUltimate(action.actor, action.targets));
                 
+                // 必殺技実行後にも即座に勝敗判定を行う
+                if (CheckBattleOver()) yield break;
+
                 // 全ての予約済み必殺技が終わったら、割り込みを解除
                 if (_ultimateQueue.Count == 0)
                 {

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using DG.Tweening;
 
 /// <summary>
 /// 戦闘画面上でキャラクターの見た目（2.5D）とデータを管理する実体クラス
@@ -326,6 +327,28 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
             sc.a = alpha;
             _shadowCaster.color = sc;
         }
+    }
+
+    /// <summary>
+    /// 被弾時のノックバック演出（後ろに下がる・傾く・戻る）
+    /// </summary>
+    public void PlayKnockback(float intensity = 1.0f)
+    {
+        // ビルボード処理と競合しないよう、ローカル座標をベースに演出する
+        float direction = Data.isAlly ? -1f : 1f; // 味方なら左、敵なら右へ
+        float moveDist = 0.3f * intensity * direction; // directionの向きを考慮
+        float rotAngle = 10f * intensity * direction;
+        float duration = 0.1f;
+
+        Sequence seq = DOTween.Sequence();
+        
+        // 1. 下がる & 傾く
+        seq.Append(_spriteRenderer.transform.DOLocalMoveX(moveDist, duration).SetRelative());
+        seq.Join(_spriteRenderer.transform.DOLocalRotate(new Vector3(0, 0, rotAngle), duration).SetRelative());
+        
+        // 2. 素早く戻る
+        seq.Append(_spriteRenderer.transform.DOLocalMoveX(0, duration * 2f));
+        seq.Join(_spriteRenderer.transform.DOLocalRotate(Vector3.zero, duration * 2f));
     }
 }
 

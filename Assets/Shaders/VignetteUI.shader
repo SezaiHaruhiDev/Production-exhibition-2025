@@ -10,12 +10,12 @@ Shader "Custom/UI/VignetteFilter"
         _Smoothness ("Center Clear Area", Range(0, 1)) = 0.5
         _Softness ("Edge Softness", Range(0, 1)) = 0.5
 
-        _StencilComp ("Stencil Comparison", Float) = 8
-        _Stencil ("Stencil ID", Float) = 0
-        _StencilOp ("Stencil Operation", Float) = 0
-        _StencilWriteMask ("Stencil Write Mask", Float) = 255
-        _StencilReadMask ("Stencil Read Mask", Float) = 255
-        _ColorMask ("Color Mask", Float) = 15
+        [HideInInspector] _StencilComp ("Stencil Comparison", Float) = 8
+        [HideInInspector] _Stencil ("Stencil ID", Float) = 0
+        [HideInInspector] _StencilOp ("Stencil Operation", Float) = 0
+        [HideInInspector] _StencilWriteMask ("Stencil Write Mask", Float) = 255
+        [HideInInspector] _StencilReadMask ("Stencil Read Mask", Float) = 255
+        [HideInInspector] _ColorMask ("Color Mask", Float) = 15
     }
 
     SubShader
@@ -41,7 +41,7 @@ Shader "Custom/UI/VignetteFilter"
         Cull Off
         Lighting Off
         ZWrite Off
-        ZTest [unityTest]
+        ZTest [unity_GUIZTestMode]
         Blend SrcAlpha OneMinusSrcAlpha
         ColorMask [_ColorMask]
 
@@ -65,7 +65,6 @@ Shader "Custom/UI/VignetteFilter"
                 float4 vertex   : SV_POSITION;
                 fixed4 color    : COLOR;
                 float2 texcoord : TEXCOORD0;
-                float4 worldPosition : TEXCOORD1;
             };
 
             fixed4 _Color;
@@ -77,8 +76,7 @@ Shader "Custom/UI/VignetteFilter"
             v2f vert(appdata_t IN)
             {
                 v2f OUT;
-                OUT.worldPosition = IN.vertex;
-                OUT.vertex = UnityObjectToClipPos(OUT.worldPosition);
+                OUT.vertex = UnityObjectToClipPos(IN.vertex);
                 OUT.texcoord = IN.texcoord;
                 OUT.color = IN.color * _Color;
                 return OUT;
@@ -87,14 +85,9 @@ Shader "Custom/UI/VignetteFilter"
             fixed4 frag(v2f IN) : SV_Target
             {
                 float2 uv = IN.texcoord;
-                
-                // 中心からの距離 (0.0 to 0.707...)
                 float dist = distance(uv, float2(0.5, 0.5));
                 dist *= _Intensity;
 
-                // 中央をクリアにするための計算
-                // _Smoothness: どこまで透明に保つか
-                // _Softness: 境界の柔らかさ
                 float vignette = smoothstep(_Smoothness, _Smoothness + _Softness, dist);
 
                 fixed4 col = _VignetteColor;
