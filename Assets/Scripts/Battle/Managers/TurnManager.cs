@@ -78,9 +78,9 @@ public class TurnManager : MonoBehaviour
     private void Awake()
     {
         if (unitManager == null) unitManager = GetComponent<UnitManager>();
-        if (battleUI == null) battleUI = FindObjectOfType<BattleUIManager>();
+        if (battleUI == null) battleUI = FindFirstObjectByType<BattleUIManager>();
         if (deckManager == null) deckManager = GetComponent<EmotionDeckManager>();
-        if (presentationManager == null) presentationManager = FindObjectOfType<BattlePresentationManager>();
+        if (presentationManager == null) presentationManager = FindFirstObjectByType<BattlePresentationManager>();
 
         Assert.IsNotNull(battleDatabaseSO, "TurnManager: BattleDatabaseSO is not assigned.");
         Assert.IsNotNull(skillDatabaseSO, "TurnManager: SkillDatabaseSO is not assigned.");

@@ -75,7 +75,7 @@ public class BattleUIManager : MonoBehaviour
 
     private void Awake()
     {
-        _deckManager = FindObjectOfType<EmotionDeckManager>();
+        _deckManager = FindFirstObjectByType<EmotionDeckManager>();
 
         if (handArea != null && handArea.GetComponent<HandLayoutGroup>() == null)
         {
@@ -90,9 +90,9 @@ public class BattleUIManager : MonoBehaviour
         if (battleStartGroup != null) battleStartGroup.alpha = 0f;
         skillPanelRoot.SetActive(false);
         
-        if (cardSlot == null) cardSlot = FindObjectOfType<CardSlotUI>();
+        if (cardSlot == null) cardSlot = FindFirstObjectByType<CardSlotUI>();
 
-        _turnManager = FindObjectOfType<TurnManager>();
+        _turnManager = FindFirstObjectByType<TurnManager>();
         if (_turnManager != null)
         {
             _turnManager.OnMPChanged += (current, max) => 
@@ -277,7 +277,7 @@ public class BattleUIManager : MonoBehaviour
         {
             var card = cardSlot.CurrentCard;
             cardSlot.Clear();
-            var deckManager = FindObjectOfType<EmotionDeckManager>();
+            var deckManager = FindFirstObjectByType<EmotionDeckManager>();
             if (deckManager != null)
             {
                 deckManager.AddCard(card);

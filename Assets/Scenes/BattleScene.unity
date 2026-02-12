@@ -4672,8 +4672,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BattlePresentationManager
   _uiManager: {fileID: 474040234}
   _unitManager: {fileID: 1180543812}
-  allyVictoryCameraOffset: {x: 0, y: 0, z: 0}
-  enemyVictoryCameraOffset: {x: 0, y: 0, z: 0}
+  allyVictoryCameraOffset: {x: -9, y: 6, z: -20}
+  enemyVictoryCameraOffset: {x: 9, y: 6, z: -20}
   cameraZoomDuration: 1.5
 --- !u!4 &2138052090
 Transform:

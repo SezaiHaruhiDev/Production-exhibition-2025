@@ -34,8 +34,8 @@ public class BattlePresentationManager : MonoBehaviour
 
     private void Awake()
     {
-        if (_uiManager == null) _uiManager = FindObjectOfType<BattleUIManager>();
-        if (_unitManager == null) _unitManager = FindObjectOfType<UnitManager>();
+        if (_uiManager == null) _uiManager = FindFirstObjectByType<BattleUIManager>();
+        if (_unitManager == null) _unitManager = FindFirstObjectByType<UnitManager>();
     }
 
 
