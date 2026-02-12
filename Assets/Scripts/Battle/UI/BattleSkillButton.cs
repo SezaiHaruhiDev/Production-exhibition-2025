@@ -20,7 +20,7 @@ public class BattleSkillButton : MonoBehaviour
     public void Initialize(BattleUIManager manager)
     {
         _manager = manager;
-        _turnManager = Object.FindFirstObjectByType<TurnManager>();
+        _turnManager = FindObjectOfType<TurnManager>();
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(OnClicked);
     }

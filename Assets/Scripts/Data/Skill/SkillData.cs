@@ -33,6 +33,7 @@ public class SkillData : ScriptableObject
     public GameObject effectPrefab;      // スキル発動時に生成する連番PNG等のエフェクト
     public float hitImpactDelay = 0.5f;  // エフェクト生成からダメージ発生までの秒数
     public float effectYOffset = 1.5f;   // エフェクトの高さオフセット
+    public AudioClip hitSE;              // ヒット時に再生するSE
 
 
     /// <summary>
@@ -83,5 +84,21 @@ public class SkillData : ScriptableObject
             }
         }
         return category == SkillCategory.Revive;
+    }
+
+    /// <summary>
+    /// 感情カードを考慮して、このスキルが「攻撃」を含むかどうかを判定する
+    /// </summary>
+    public bool IsAttackSkill(EmotionCardData card)
+    {
+        if (card != null)
+        {
+            var set = emotionEffectSet.Find(s => s.emotion == card.emotion && s.level == card.level);
+            if (set != null && set.effectDataList != null && set.effectDataList.Count > 0)
+            {
+                return set.effectDataList.Exists(e => e.skillCategory == SkillCategory.Attack);
+            }
+        }
+        return category == SkillCategory.Attack;
     }
 }

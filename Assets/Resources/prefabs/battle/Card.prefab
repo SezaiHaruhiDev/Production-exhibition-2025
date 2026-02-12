@@ -142,6 +142,7 @@ MonoBehaviour:
   hoverScale: 1.2
   hoverYOffset: 100
   hoverSortOrderOffset: 100
+  cardDrawSE: {fileID: 8300000, guid: 7089c2956a8abf2438058e0afb892508, type: 3}
 --- !u!225 &832904387638360295
 CanvasGroup:
   m_ObjectHideFlags: 0

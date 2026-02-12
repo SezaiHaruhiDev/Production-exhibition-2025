@@ -14,17 +14,24 @@ public static class SkillExecutor
     {
         if (skill == null) yield break;
 
-        Debug.Log($"[SkillExecutor] Executing {skill.displayName} (Card: {(emotion != null ? emotion.emotionName : "None")}) on {targets.Count} targets.");
 
         // 演出マネージャーがあれば演出を再生し、そのコールバックで効果を適用する
         if (presentation != null)
         {
+             // 攻撃以外（回復・蘇生）ならノックバックさせない
+             bool playKnockback = skill.IsAttackSkill(emotion);
+
+             // 演出対象をフィルタリング：基本は生存者のみ（蘇生スキルの場合は死亡者も含める）
+             var presentationTargets = targets.FindAll(t => t != null && (t.Data.currentHp > 0 || skill.category == SkillCategory.Revive));
+
              yield return presentation.StartCoroutine(presentation.PlayAttackSequence(
                  actor, 
-                 targets, 
+                 presentationTargets, 
                  skill.effectPrefab, 
                  skill.hitImpactDelay, 
                  skill.effectYOffset,
+                 playKnockback,
+                 skill.hitSE,
                  () => { ApplyEffects(actor, targets, skill, emotion); }
              ));
         }

@@ -52,7 +52,7 @@ public class UnitHPBarUI : MonoBehaviour
         RectTransform rt = GetComponent<RectTransform>();
         if (rt != null)
         {
-            rt.localPosition = positionOffset; // 設定されたオフセットを使用
+            rt.localPosition = positionOffset; 
             rt.localScale = Vector3.one * 0.01f;
         }
 
@@ -87,16 +87,16 @@ public class UnitHPBarUI : MonoBehaviour
     /// </summary>
     public void UpdateHP(int current, int max)
     {
-        if (!_isInitialized) Initialize();
         if (max <= 0 || fillImage == null) return;
+
+        // 稀に初期化前に呼ばれた場合、100%幅で決め打ちするか、その場で初期化を試みる
+        if (!_isInitialized) Initialize();
+        if (_fullWidth <= 0) _fullWidth = 100f; // 安全策
 
         float ratio = Mathf.Clamp01((float)current / max);
         float targetX = -_fullWidth * (1f - ratio);
 
         fillImage.rectTransform.DOKill();
         fillImage.rectTransform.DOAnchorPosX(targetX, animationDuration).SetEase(Ease.OutQuad);
-        
-        // 残りHPに応じて色を変える演出などもここに追加可能
-        // if (ratio < 0.2f) fillImage.color = Color.red; 
     }
 }

@@ -14,6 +14,7 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
     [SerializeField] private GameObject _visualRoot; // カード表示部分のルート
     [SerializeField] private Sprite _emptySlotSprite; // カードがない時に表示する画像
     [SerializeField] private Color _emptyColor = new Color(1, 1, 1, 0.5f); // 空の時の色（少し薄くするなど）
+    [SerializeField] private AudioClip cardSetSE;
 
     public EmotionCardData CurrentCard { get; private set; }
     public System.Action<EmotionCardData> OnCardSet;     // カードがセットされた時
@@ -45,6 +46,12 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
             }
 
             SetCard(cardData);
+            
+            if (cardSetSE != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySE(cardSetSE);
+            }
+
             OnCardSet?.Invoke(cardData);
         }
     }
@@ -58,6 +65,12 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
         {
             var returningCard = CurrentCard;
             Clear();
+
+            if (cardSetSE != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySE(cardSetSE);
+            }
+
             OnCardRemoved?.Invoke(returningCard);
         }
     }

@@ -78,9 +78,9 @@ public class TurnManager : MonoBehaviour
     private void Awake()
     {
         if (unitManager == null) unitManager = GetComponent<UnitManager>();
-        if (battleUI == null) battleUI = FindFirstObjectByType<BattleUIManager>();
+        if (battleUI == null) battleUI = FindObjectOfType<BattleUIManager>();
         if (deckManager == null) deckManager = GetComponent<EmotionDeckManager>();
-        if (presentationManager == null) presentationManager = FindFirstObjectByType<BattlePresentationManager>();
+        if (presentationManager == null) presentationManager = FindObjectOfType<BattlePresentationManager>();
 
         Assert.IsNotNull(battleDatabaseSO, "TurnManager: BattleDatabaseSO is not assigned.");
         Assert.IsNotNull(skillDatabaseSO, "TurnManager: SkillDatabaseSO is not assigned.");
@@ -220,7 +220,6 @@ public class TurnManager : MonoBehaviour
             {
                 _currentTurnCount = nextTurnCount;
                 OnTurnCountChanged?.Invoke(_currentTurnCount);
-                Debug.Log($"[TurnManager] Global Turn Advanced: {_currentTurnCount} (Total AV: {_totalAV})");
             }
 
             // 目標値に達したユニットを探す
@@ -265,15 +264,11 @@ public class TurnManager : MonoBehaviour
 
     private void EndBattle()
     {
-        Debug.Log($"Battle Ended! Result: {state}");
         SoundManager.Instance.StopBGM();
-        if (state == BattleState.Won)
+        
+        if (presentationManager != null)
         {
-            Debug.Log("YOU WIN!");
-        }
-        else if (state == BattleState.Lost)
-        {
-            Debug.Log("YOU LOSE...");
+            StartCoroutine(presentationManager.PlayBattleEndSequence(state == BattleState.Won));
         }
     }
 
@@ -287,6 +282,8 @@ public class TurnManager : MonoBehaviour
     private IEnumerator UnitTurn(BattleUnit unit)
     {
         ActiveUnit = unit;
+        if (presentationManager != null) presentationManager.SetAmbientFocus(unit);
+        
         unit.SetTurnActive(true);
         _skipTurnRequested = false;
         while (_isInterrupting) yield return null;
@@ -385,7 +382,6 @@ public class TurnManager : MonoBehaviour
                     }
                     if (_skipTurnRequested)
                     {
-                        Debug.Log("Turn skipped by player.");
                         AddMP(SKIP_TURN_MP_RECOVERY);
                         
                         // 全てのターゲットマークを消去
@@ -457,7 +453,7 @@ public class TurnManager : MonoBehaviour
         // ターン終了時にスロットに残っている場合は手札に戻す
         if (battleUI != null) battleUI.ResetSlotToHand();
 
-        // 透明化を解除して全員不透明に戻す
+        if (presentationManager != null) presentationManager.SetAmbientFocus(null);
         if (presentationManager != null) presentationManager.SetOtherUnitsTransparency(null, null, 1.0f);
 
         unit.SetTurnActive(false);
@@ -478,6 +474,7 @@ public class TurnManager : MonoBehaviour
     private void OnUnitClicked(BattleUnit unit)
     {
         _lastClickedUnit = unit;
+        if (battleUI != null) battleUI.PlayTargetSelectSE();
     }
 
     private void SetupTargetSelection(BattleUnit actor, SkillData skill, EmotionCardData card, bool active)
@@ -562,7 +559,6 @@ public class TurnManager : MonoBehaviour
                 unit.RefreshHPBar();
                 unit.ShowDamage(10);
             }
-            Debug.Log("Debug: Allies HP -10");
         }
         if (Keyboard.current.jKey.wasPressedThisFrame)
         {
@@ -571,7 +567,6 @@ public class TurnManager : MonoBehaviour
                 unit.Data.currentHp = Mathf.Min(unit.Data.maxHp, unit.Data.currentHp + 10);
                 unit.RefreshHPBar();
             }
-            Debug.Log("Debug: Allies HP +10");
         }
     }
 
@@ -695,14 +690,22 @@ public class TurnManager : MonoBehaviour
     /// </summary>
     private IEnumerator ExecuteUltimate(BattleUnit unit, List<BattleUnit> targets)
     {
-        unit.SetTurnActive(true);
+        // もし現在自分のターンでないなら、一時的に矢印（TurnActive）を出す
+        bool wasAlreadyActive = (unit == ActiveUnit);
+        if (!wasAlreadyActive) unit.SetTurnActive(true);
+
         SkillData ultSkill = skillDatabaseSO.GetById(unit.Data.ultimateSkillId);
         if (ultSkill != null)
         {
             yield return StartCoroutine(SkillExecutor.ExecuteAsync(unit, targets, ultSkill, null, presentationManager));
             yield return new WaitForSeconds(0.2f);
         }
-        unit.SetTurnActive(false);
+
+        // 奥義終了時、もしこのユニットの本来のターンが始まっていたら、矢印は消さない
+        if (unit != ActiveUnit)
+        {
+            unit.SetTurnActive(false);
+        }
     }
 
     /// <summary>

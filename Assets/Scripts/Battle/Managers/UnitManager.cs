@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -121,8 +122,6 @@ public class UnitManager : MonoBehaviour
 
         Sprite sprite = master.characterBattleSprite != null ? master.characterBattleSprite : master.characterBigSprite;
         
-        Debug.Log($"[UnitManager] Spawning {data.name} (ID: {master.id}). IsAlly: {isAlly}. MasterType: {master.GetType().Name}. Sprite: {(sprite != null ? sprite.name : "NULL")}");
-
         battleUnit.Setup(data, sprite);
         allbattleunits.Add(data.unitId, battleUnit);
         if (isAlly) _currentAllyCount++; else _currentEnemyCount++;
@@ -144,7 +143,23 @@ public class UnitManager : MonoBehaviour
         }
         else
         {
-            unit.gameObject.SetActive(false);
+            StartCoroutine(FadeOutExit(unit));
         }
+    }
+
+    private IEnumerator FadeOutExit(BattleUnit unit)
+    {
+        unit.IsFadingOut = true;
+        // 0.5秒かけてフェードアウト
+        float duration = 0.5f;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+            unit.SetAlpha(alpha);
+            yield return null;
+        }
+        unit.gameObject.SetActive(false);
     }
 }

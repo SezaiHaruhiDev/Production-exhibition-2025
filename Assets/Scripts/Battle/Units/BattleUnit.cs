@@ -28,6 +28,7 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
     private Sprite _originalSprite;
 
     public UnitCharacter Data { get; private set; }
+    public bool IsFadingOut { get; set; } = false;
 
     /// <summary>
     /// ユニットの初期設定を行い、指定された画像を表示する
@@ -42,7 +43,6 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
 
         if (_spriteRenderer != null)
         {
-            Debug.Log($"[BattleUnit] Setup {data.name}: Setting sprite to {(sprite != null ? sprite.name : "NULL")} on {_spriteRenderer.gameObject.name}");
             _spriteRenderer.sprite = sprite;
             _originalSprite = sprite;
         }
@@ -327,6 +327,13 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
             sc.a = alpha;
             _shadowCaster.color = sc;
         }
+
+        if (_blobShadow != null)
+        {
+            Color bc = _blobShadow.color;
+            bc.a = alpha * 0.5f; // もともとの影の濃さを考慮
+            _blobShadow.color = bc;
+        }
     }
 
     /// <summary>
@@ -349,6 +356,36 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
         // 2. 素早く戻る
         seq.Append(_spriteRenderer.transform.DOLocalMoveX(0, duration * 2f));
         seq.Join(_spriteRenderer.transform.DOLocalRotate(Vector3.zero, duration * 2f));
+    }
+
+    /// <summary>
+    /// 行動開始時の「踏み込み」演出
+    /// </summary>
+    public void PlayStepAction(float duration = 0.15f)
+    {
+        float direction = Data.isAlly ? 1f : -1f; 
+        float moveDist = 0.8f * direction; // より深く踏み込む
+
+        Sequence seq = DOTween.Sequence();
+        // 踏み込む
+        seq.Append(_spriteRenderer.transform.DOLocalMoveX(moveDist, duration).SetEase(Ease.OutCubic));
+        // 維持時間を短縮し、素早く戻る
+        seq.AppendInterval(0.1f);
+        seq.Append(_spriteRenderer.transform.DOLocalMoveX(0, duration).SetEase(Ease.InExpo)); // 戻りはさらに鋭く
+    }
+
+    /// <summary>
+    /// 回復・補助時の「ジャンプ」演出
+    /// </summary>
+    public void PlayJumpAction(float duration = 0.2f)
+    {
+        float jumpHeight = 0.5f;
+        Sequence seq = DOTween.Sequence();
+        // 上に跳ねる
+        seq.Append(_spriteRenderer.transform.DOLocalMoveY(jumpHeight, duration).SetEase(Ease.OutCubic).SetRelative());
+        // 戻る
+        seq.Append(_spriteRenderer.transform.DOLocalMoveY(-jumpHeight, duration).SetEase(Ease.InCubic).SetRelative());
+        // 着地で少し潰れる（任意だが一旦シンプルに）
     }
 }
 

@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 022a2c30795de0448b9d4d55fd3a7d1d, type: 3}
   m_Name: Joy3
   m_EditorClassIdentifier: Assembly-CSharp::EmotionCardData
-  emotionName: "\u559C\u3073"
+  emotionName: "\u559C\u30733"
   cardSprite: {fileID: 21300000, guid: 68f2381487c3bfa4585cd0476bc14cd9, type: 3}
-  cardThemeColor: {r: 1, g: 1, b: 1, a: 1}
   emotion: 0
   level: 3
   nextLevelCard: {fileID: 0}

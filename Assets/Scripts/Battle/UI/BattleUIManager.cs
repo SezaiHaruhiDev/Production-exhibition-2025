@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using DG.Tweening;
 
 /// <summary>
 /// 戦闘UIの総括管理
@@ -31,6 +33,14 @@ public class BattleUIManager : MonoBehaviour
     [SerializeField] private TMPro.TextMeshProUGUI turnText;
     [SerializeField] private TMPro.TextMeshProUGUI promptText; // 行動指示メッセージ用
     [SerializeField] private CanvasGroup rootCanvasGroup;
+    [SerializeField] private AudioClip targetSelectSE;
+    [SerializeField] private AudioClip ultimateReadySE;
+
+    [Header("Start Sequence")]
+    [SerializeField] private CanvasGroup battleStartGroup;
+    [SerializeField] private TMPro.TextMeshProUGUI battleStartText;
+
+    private bool _wasUltimateReady = false;
 
     [Header("Data")]
     [SerializeField] private SkillDatabaseSO skillDatabase;
@@ -65,7 +75,7 @@ public class BattleUIManager : MonoBehaviour
 
     private void Awake()
     {
-        _deckManager = FindFirstObjectByType<EmotionDeckManager>();
+        _deckManager = FindObjectOfType<EmotionDeckManager>();
 
         if (handArea != null && handArea.GetComponent<HandLayoutGroup>() == null)
         {
@@ -77,11 +87,12 @@ public class BattleUIManager : MonoBehaviour
             btn.Initialize(this);
             btn.Disable();
         }
+        if (battleStartGroup != null) battleStartGroup.alpha = 0f;
         skillPanelRoot.SetActive(false);
         
-        if (cardSlot == null) cardSlot = FindFirstObjectByType<CardSlotUI>();
+        if (cardSlot == null) cardSlot = FindObjectOfType<CardSlotUI>();
 
-        _turnManager = FindFirstObjectByType<TurnManager>();
+        _turnManager = FindObjectOfType<TurnManager>();
         if (_turnManager != null)
         {
             _turnManager.OnMPChanged += (current, max) => 
@@ -93,7 +104,19 @@ public class BattleUIManager : MonoBehaviour
             _turnManager.OnUltimateChanged += (current, max) => 
             {
                 if (ultGauge != null) ultGauge.UpdateView(current, max);
-                if (ultimateButton != null) ultimateButton.interactable = (current >= max);
+                
+                bool isReady = (current >= max);
+                if (ultimateButton != null) ultimateButton.interactable = isReady;
+
+                // たまった瞬間だけSEを鳴らす
+                if (isReady && !_wasUltimateReady)
+                {
+                    if (ultimateReadySE != null && SoundManager.Instance != null)
+                    {
+                        SoundManager.Instance.PlaySE(ultimateReadySE);
+                    }
+                }
+                _wasUltimateReady = isReady;
             };
 
             _turnManager.OnTurnCountChanged += (turn) => 
@@ -254,7 +277,7 @@ public class BattleUIManager : MonoBehaviour
         {
             var card = cardSlot.CurrentCard;
             cardSlot.Clear();
-            var deckManager = FindFirstObjectByType<EmotionDeckManager>();
+            var deckManager = FindObjectOfType<EmotionDeckManager>();
             if (deckManager != null)
             {
                 deckManager.AddCard(card);
@@ -410,6 +433,7 @@ public class BattleUIManager : MonoBehaviour
     {
         if (!_isInUltimateSelection) return;
         
+        PlayTargetSelectSE();
         // 選択された味方を保持
         _tempUltimateActor = unit;
         _tempUltimateSkill = _turnManager.GetSkillData(unit.Data.ultimateSkillId);
@@ -478,6 +502,7 @@ public class BattleUIManager : MonoBehaviour
 
     private void OnUltimateTargetSelected(BattleUnit clickedTarget)
     {
+        PlayTargetSelectSE();
         // クリックされたターゲットから、実際にスキルが及ぶ全対象をリストアップする
         List<BattleUnit> finalTargets = new List<BattleUnit>();
         SkillTargetType effectiveType = _tempUltimateSkill.targetType;
@@ -569,5 +594,56 @@ public class BattleUIManager : MonoBehaviour
             rootCanvasGroup.interactable = visible;
             rootCanvasGroup.blocksRaycasts = visible;
         }
+    }
+    /// <summary>
+    /// ターゲット選択時のSEを再生する
+    /// </summary>
+    public void PlayTargetSelectSE()
+    {
+        if (targetSelectSE != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySE(targetSelectSE);
+        }
+    }
+
+    /// <summary>
+    /// 戦闘開始の演出（スプラッシュ文字）を再生する
+    /// </summary>
+    public IEnumerator PlayBattleStartSplash(string text)
+    {
+        yield return StartCoroutine(PlayGenericSplash(text, 1.5f));
+    }
+
+    /// <summary>
+    /// 戦闘結果（VICTORY / DEFEATなど）を表示する
+    /// </summary>
+    public IEnumerator PlayBattleEndSplash(string text)
+    {
+        // 終了時は長時間出しておきたいため、待ち時間を長めにする
+        yield return StartCoroutine(PlayGenericSplash(text, 5.0f));
+    }
+
+    private IEnumerator PlayGenericSplash(string text, float waitDuration)
+    {
+        if (battleStartGroup == null || battleStartText == null) yield break;
+
+        battleStartText.text = text;
+        RectTransform rect = battleStartText.rectTransform;
+        
+        // 初期状態
+        battleStartGroup.alpha = 0f;
+        rect.anchoredPosition = new Vector2(-1200f, 0f);
+        
+        // スライドイン
+        battleStartGroup.DOFade(1f, 0.2f);
+        yield return rect.DOAnchorPos(Vector2.zero, 0.6f).SetEase(Ease.OutBack).WaitForCompletion();
+        
+        yield return new WaitForSeconds(waitDuration);
+        
+        // スライドアウト
+        battleStartGroup.DOFade(0f, 0.3f);
+        yield return rect.DOAnchorPos(new Vector2(1200f, 0f), 0.5f).SetEase(Ease.InBack).WaitForCompletion();
+        
+        rect.anchoredPosition = Vector2.zero;
     }
 }

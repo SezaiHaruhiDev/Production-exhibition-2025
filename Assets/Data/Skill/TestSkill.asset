@@ -21,7 +21,7 @@ MonoBehaviour:
   imaginationCost: 10
   canChargeUltimate: 1
   ultimateChargeValue: 60
-  basePower: 5
+  basePower: 30
   targetType: 1
   emotionEffectSet:
   - emotion: 0
@@ -51,3 +51,4 @@ MonoBehaviour:
   effectPrefab: {fileID: 3610342069679686395, guid: 522db79ea9834f74992cca3485c9baf3, type: 3}
   hitImpactDelay: 0.3
   effectYOffset: 3
+  hitSE: {fileID: 8300000, guid: 31bca54953b80a144a6600113a08091b, type: 3}

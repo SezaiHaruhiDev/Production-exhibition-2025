@@ -18,6 +18,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
     [SerializeField] private float hoverScale = 1.2f;
     [SerializeField] private float hoverYOffset = 100f;
     [SerializeField] private int hoverSortOrderOffset = 100;
+    [SerializeField] private AudioClip cardDrawSE;
 
     public EmotionCardData Data { get; private set; }
     public bool IsConsumed => _isConsumed;
@@ -67,10 +68,6 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
             cardIcon.sprite = data.cardSprite;
         }
 
-        if (frameImage != null)
-        {
-            frameImage.color = data.cardThemeColor;
-        }
 
         UpdateVisualState();
     }
@@ -97,6 +94,12 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
         float elapsed = 0f;
         
         if (_canvas != null) _canvas.sortingOrder = 999; // 最前面
+
+        // ドロー音再生
+        if (cardDrawSE != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySE(cardDrawSE);
+        }
 
         while (elapsed < duration)
         {

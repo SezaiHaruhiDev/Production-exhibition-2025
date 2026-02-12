@@ -8,7 +8,6 @@ public class EmotionCardData : ScriptableObject
 {
     public string emotionName;
     public Sprite cardSprite;
-    public Color cardThemeColor = Color.white;
     public Emotion emotion;
     [Range(1, 3)]
     public int level = 1;
