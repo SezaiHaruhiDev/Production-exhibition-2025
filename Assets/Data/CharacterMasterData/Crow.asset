@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 940429c3619594865886e0e0490d5038, type: 3}
+  m_Name: Crow
+  m_EditorClassIdentifier: Assembly-CSharp::AllyMasterSO
+  id: 1
+  characterName: "\u30DF\u30E4\u30DE\u30AC\u30E9\u30B9"
+  characterMiniSprite: {fileID: 21300000, guid: 1af5905d3476d4342ba2cfdc840d498c, type: 3}
+  characterBigSprite: {fileID: 21300000, guid: dc7edc6fcae1ba8469b184c8a448176f, type: 3}
+  characterBattleSprite: {fileID: 21300000, guid: a87ac8b596a4b6445b119b40b567ce42, type: 3}
+  hp: 10
+  mp: 10
+  atk: 10
+  def: 10
+  exp: 0
+  level: 0
+  speed: 12
+  growthTable: {fileID: 0}
+  skillId: 00000000
+  ultimateSkillId: 0
+  downSprite: {fileID: 21300000, guid: ca4f45ae1ea36b545accc94b42446f4c, type: 3}

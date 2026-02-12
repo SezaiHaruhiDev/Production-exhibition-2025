@@ -4672,9 +4672,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BattlePresentationManager
   _uiManager: {fileID: 474040234}
   _unitManager: {fileID: 1180543812}
-  allyVictoryCameraOffset: {x: -9, y: 6, z: -20}
-  enemyVictoryCameraOffset: {x: 9, y: 6, z: -20}
-  cameraZoomDuration: 1.5
+  _allyVictoryCameraOffset: {x: -9, y: 6, z: -24}
+  _enemyVictoryCameraOffset: {x: 9, y: 6, z: -24}
+  _cameraZoomDuration: 1.5
+  _victorySE: {fileID: 8300000, guid: 381a220b13119b8479b09ed139a78cb1, type: 3}
+  _defeatSE: {fileID: 8300000, guid: 196ab4eed14382c4a8cd522f185d4816, type: 3}
 --- !u!4 &2138052090
 Transform:
   m_ObjectHideFlags: 0

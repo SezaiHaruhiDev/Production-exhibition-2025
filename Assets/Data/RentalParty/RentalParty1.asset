@@ -14,50 +14,50 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RentalPartySO
   rentalCharacter:
   - baseAlly: {fileID: 11400000, guid: 2a9bafd7a6a57fc4ab7ae5e1434937aa, type: 2}
-    name: "\u30ED\u30D3\u30F3\uFF08\u30EC\u30F3\u30BF\u30EB\uFF09"
-    level: 0
-    maxHp: 100
-    maxMp: 100
+    name: "\u30B9\u30BA\u30E1"
+    level: 1
+    maxHp: 200
+    maxMp: 50
     hpRatio: 1
     mpRatio: 1
     atk: 10
     def: 10
     exp: 0
-    speed: 20
-    skillId: 0000000000000000
-  - baseAlly: {fileID: 11400000, guid: 2a9bafd7a6a57fc4ab7ae5e1434937aa, type: 2}
-    name: "\u30ED\u30D3\u30F3\uFF08\u30EC\u30F3\u30BF\u30EB\uFF09"
-    level: 0
+    speed: 10
+    skillId: 
+  - baseAlly: {fileID: 11400000, guid: 63f699a0f0e61eb43a51f74e3e3da5fa, type: 2}
+    name: "\u30DF\u30E4\u30DE\u30AC\u30E9\u30B9"
+    level: 1
     maxHp: 100
-    maxMp: 100
+    maxMp: 30
+    hpRatio: 1
+    mpRatio: 1
+    atk: 20
+    def: 5
+    exp: 0
+    speed: 20
+    skillId: 
+  - baseAlly: {fileID: 11400000, guid: 5a654f2b0bca0304ba21f393b49f2324, type: 2}
+    name: "\u9B5A"
+    level: 1
+    maxHp: 110
+    maxMp: 80
     hpRatio: 1
     mpRatio: 1
     atk: 10
     def: 10
     exp: 0
-    speed: 20
-    skillId: 0000000000000000
-  - baseAlly: {fileID: 11400000, guid: 2a9bafd7a6a57fc4ab7ae5e1434937aa, type: 2}
-    name: "\u30ED\u30D3\u30F3\uFF08\u30EC\u30F3\u30BF\u30EB\uFF09"
-    level: 0
-    maxHp: 100
-    maxMp: 100
+    speed: 10
+    skillId: 
+  - baseAlly: {fileID: 11400000, guid: ea358ae0a8904e3408bb4ebba6642c5e, type: 2}
+    name: "\u30CF\u30A8"
+    level: 1
+    maxHp: 95
+    maxMp: 20
     hpRatio: 1
     mpRatio: 1
     atk: 10
     def: 10
     exp: 0
-    speed: 20
-    skillId: 0000000000000000
-  - baseAlly: {fileID: 11400000, guid: 2a9bafd7a6a57fc4ab7ae5e1434937aa, type: 2}
-    name: "\u30ED\u30D3\u30F3\uFF08\u30EC\u30F3\u30BF\u30EB\uFF09"
-    level: 0
-    maxHp: 100
-    maxMp: 100
-    hpRatio: 1
-    mpRatio: 1
-    atk: 10
-    def: 10
-    exp: 0
-    speed: 20
-    skillId: 0000000000000000
+    speed: 30
+    skillId: 

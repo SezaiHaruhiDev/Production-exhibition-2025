@@ -20,17 +20,11 @@ public class BattlePresentationManager : MonoBehaviour
     private float _currentDimAlpha = 1.0f;
 
     [Header("End Sequence Settings")]
-    [SerializeField] private Vector3 allyVictoryCameraOffset;
-    [SerializeField] private Vector3 enemyVictoryCameraOffset;
-    [SerializeField] private float cameraZoomDuration = 1.5f;
-
-    private void Reset()
-    {
-        //初期値の設定
-        allyVictoryCameraOffset = new Vector3(-4f, 2f, -8f);
-        enemyVictoryCameraOffset = new Vector3(4f, 2f, -8f);
-        cameraZoomDuration = 1.5f;
-    }
+    [SerializeField] private Vector3 _allyVictoryCameraOffset = new Vector3(-4f, 2f, -8f);
+    [SerializeField] private Vector3 _enemyVictoryCameraOffset = new Vector3(4f, 2f, -8f);
+    [SerializeField] private float _cameraZoomDuration = 1.5f;
+    [SerializeField] private AudioClip _victorySE;
+    [SerializeField] private AudioClip _defeatSE;
 
     private void Awake()
     {
@@ -43,18 +37,41 @@ public class BattlePresentationManager : MonoBehaviour
     {
         if (Camera.main == null) yield break;
 
+        // --- 勝敗決定後のクリーンアップ：全員不透明、UI非表示 ---
+        _ambientFocusActor = null;
+        ResetAllTransparency();
+        
+        if (_unitManager != null)
+        {
+            foreach (var unit in _unitManager.AllUnits)
+            {
+                if (unit == null) continue;
+                unit.SetTurnActive(false);
+                unit.SetSelectable(false);
+                unit.SetAlpha(1.0f); // 死亡キャラも含め完全に不透明にする
+            }
+        }
+
         if (_uiManager != null)
         {
-            _uiManager.SetUIVisibility(false); // UIを隠す
+            _uiManager.SetUIVisibility(false); // UI（コマンド等）を隠す
         }
 
         // カメラズーム（勝った陣営の方へ）
-        Vector3 targetPos = isVictory ? allyVictoryCameraOffset : enemyVictoryCameraOffset;
-        Camera.main.transform.DOMove(targetPos, cameraZoomDuration).SetEase(Ease.OutCubic);
+        Vector3 targetPos = isVictory ? _allyVictoryCameraOffset : _enemyVictoryCameraOffset;
+        var moveTween = Camera.main.transform.DOMove(targetPos, _cameraZoomDuration).SetEase(Ease.OutCubic);
         // ついでにFOVも少し絞る（より印象的に）
-        Camera.main.DOFieldOfView(40f, cameraZoomDuration).SetEase(Ease.OutCubic);
+        Camera.main.DOFieldOfView(40f, _cameraZoomDuration).SetEase(Ease.OutCubic);
 
-        yield return new WaitForSeconds(0.5f);
+        // カメラワークが終了するのを待つ
+        yield return moveTween.WaitForCompletion();
+
+        // 勝敗に応じたSEを再生
+        AudioClip endSE = isVictory ? _victorySE : _defeatSE;
+        if (endSE != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySE(endSE);
+        }
 
         // 文字スプラッシュ
         string splashText = isVictory ? "VICTORY" : "DEFEAT";

@@ -21,7 +21,7 @@ MonoBehaviour:
   imaginationCost: 10
   canChargeUltimate: 1
   ultimateChargeValue: 60
-  basePower: 30
+  basePower: 100
   targetType: 1
   emotionEffectSet:
   - emotion: 0
