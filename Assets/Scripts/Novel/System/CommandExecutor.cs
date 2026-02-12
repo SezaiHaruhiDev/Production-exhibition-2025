@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine.UI;
 using Novel.Data;
+using Novel.Managers;
 using Common;
 
 namespace Novel.System
@@ -94,8 +95,24 @@ namespace Novel.System
                 case GameConstants.NovelCommands.Types.Skip:
                     SkipToLabel(cmd);
                     break;
+
                 case GameConstants.NovelCommands.Types.Title:
                     ShowTitle(cmd);
+                    break;
+                case GameConstants.NovelCommands.Types.CheckFlags:
+                    CheckFlags(cmd);
+                    break;
+                case GameConstants.NovelCommands.Types.BranchIf:
+                    BranchIf(cmd);
+                    break;
+                case GameConstants.NovelCommands.Types.LoadScenario:
+                    LoadScenario(cmd);
+                    break;
+                case GameConstants.NovelCommands.Types.Flag:
+                    SetFlag(cmd);
+                    break;
+                case GameConstants.NovelCommands.Types.ResetFlags:
+                    ResetFlags(cmd);
                     break;
                 default:
                     Debug.LogWarning($"CommandExecutor: Unknown command type '{cmd.type}'");
@@ -228,6 +245,52 @@ namespace Novel.System
             {
                 _manager.ShowTitleSequence(sceneName);
             }
+        }
+
+        private void CheckFlags(Command cmd)
+        {
+            if (cmd.parameters.TryGetValue("ids", out string idsStr) && 
+                cmd.parameters.TryGetValue("label", out string nextLabel))
+            {
+                string[] ids = idsStr.Split('^');
+                if (_manager.FlagManager.CheckAll(ids))
+                {
+                    _manager.GoToLabel(nextLabel);
+                }
+            }
+        }
+
+        private void BranchIf(Command cmd)
+        {
+            if (cmd.parameters.TryGetValue("id", out string id) &&
+                cmd.parameters.TryGetValue("label", out string nextLabel))
+            {
+                if (_manager.FlagManager.HasFlag(id))
+                {
+                    _manager.GoToLabel(nextLabel);
+                }
+            }
+        }
+
+        private void LoadScenario(Command cmd)
+        {
+            if (cmd.parameters.TryGetValue("file", out string fileName))
+            {
+                _manager.LoadNewScenario(fileName);
+            }
+        }
+
+        private void SetFlag(Command cmd)
+        {
+            if (cmd.parameters.TryGetValue("id", out string id))
+            {
+                _manager.FlagManager.SetFlag(id);
+            }
+        }
+
+        private void ResetFlags(Command cmd)
+        {
+            _manager.FlagManager.ResetAll();
         }
     }
 }

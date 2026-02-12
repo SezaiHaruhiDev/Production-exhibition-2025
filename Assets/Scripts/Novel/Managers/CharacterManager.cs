@@ -135,6 +135,44 @@ public class CharacterManager : MonoBehaviour
         {
             if (img != null) img.enabled = (showState == 1);
         }
+
+        // Add support for Transform parameters (Size, Pos, Color) in ChangeCharacter
+        RectTransform rt = img.GetComponent<RectTransform>();
+
+        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Size, out string sizeStr))
+        {
+            string[] parts = sizeStr.Split('^');
+            if (parts.Length == 2 &&
+                float.TryParse(parts[0], out float width) &&
+                float.TryParse(parts[1], out float height))
+            {
+                img.rectTransform.sizeDelta = new Vector2(width, height);
+            }
+        }
+
+        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Pos, out string posStr))
+        {
+            string[] parts = posStr.Split('^');
+            if (parts.Length == 2 &&
+                float.TryParse(parts[0], out float x) &&
+                float.TryParse(parts[1], out float y))
+            {
+                rt.anchoredPosition = new Vector2(x, y);
+            }
+        }
+
+        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Col, out string colStr))
+        {
+            string[] parts = colStr.Split('^');
+            if (parts.Length >= 4 &&
+                float.TryParse(parts[0], out float r) &&
+                float.TryParse(parts[1], out float g) &&
+                float.TryParse(parts[2], out float b) &&
+                float.TryParse(parts[3], out float a))
+            {
+                img.color = new Color(r / 255f, g / 255f, b / 255f, a / 255f);
+            }
+        }
     }
 
     /// <summary>

@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using Novel.Data;
+using Novel.Managers;
 using UnityEngine.Assertions;
 
 /// <summary>
@@ -48,6 +49,12 @@ public class ChoicesManager : MonoBehaviour
             string buttonText = parts[0];
             string labelName = parts[1];
 
+            // 既に選択済みの場合は表示しない
+            if (novelEngine.FlagManager != null && novelEngine.FlagManager.HasFlag(labelName))
+            {
+                continue;
+            }
+
             GameObject go = Instantiate(choiceButtonPrefab, parent);
             Button btn = go.GetComponent<Button>();
             TextMeshProUGUI tmp = go.GetComponentInChildren<TextMeshProUGUI>();
@@ -65,6 +72,12 @@ public class ChoicesManager : MonoBehaviour
                 if (logManager != null)
                 {
                     logManager.AddLog("選択", $"あなたは「{buttonText}」を選んだ。");
+                }
+
+                // フラグを立てる
+                if (novelEngine.FlagManager != null)
+                {
+                    novelEngine.FlagManager.SetFlag(labelName);
                 }
 
                 _isChoiceActive = false;

@@ -49,6 +49,11 @@ namespace Common
                 public const string Shake = "shake";
                 public const string Skip = "skip";
                 public const string Title = "title";
+                public const string CheckFlags = "ck";
+                public const string BranchIf = "bi";
+                public const string LoadScenario = "load";
+                public const string Flag = "flag";
+                public const string ResetFlags = "flagres";
             }
 
             public const string Zoom = "zoom";

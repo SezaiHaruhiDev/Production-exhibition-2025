@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Novel.System;
 using Novel.Data;
+using Novel.Managers;
 using UnityEngine.Assertions;
 using Common;
 
@@ -44,6 +45,7 @@ public class NovelEngine : MonoBehaviour
     [SerializeField] private LogManager logManager;
     [SerializeField] private UIManager uiManager;
     [SerializeField] private CameraFocusManager cameraFocusManager;
+    [SerializeField] private FlagManager flagManager;
     #endregion
 
     #region Properties for CommandExecutor
@@ -54,6 +56,7 @@ public class NovelEngine : MonoBehaviour
     public LogManager LogManager => logManager;
     public UIManager UiManager => uiManager;
     public CameraFocusManager CameraFocusManager => cameraFocusManager;
+    public FlagManager FlagManager => flagManager;
     public Image BackgroundImage => backgroundImage;
     public TextMeshProUGUI AffiliationText => affiliationText;
     public Image SwitchImage => switchImage;
@@ -77,8 +80,18 @@ public class NovelEngine : MonoBehaviour
     private void Awake()
     {
         Assert.IsNotNull(mainText, "NovelEngine: mainText is not assigned!");
+        Assert.IsNotNull(subText, "NovelEngine: subText is not assigned!");
         Assert.IsNotNull(uiManager, "NovelEngine: uiManager is not assigned!");
         Assert.IsNotNull(characterManager, "NovelEngine: characterManager is not assigned!");
+
+        if (flagManager == null)
+        {
+            flagManager = GetComponentInChildren<FlagManager>();
+            if (flagManager == null) 
+            {
+                flagManager = gameObject.AddComponent<FlagManager>();
+            }
+        }
     }
 
     void Start()
@@ -126,6 +139,16 @@ public class NovelEngine : MonoBehaviour
     }
 
     /// <summary>
+    /// 新しいシナリオファイルを読み込み、再生を開始する
+    /// </summary>
+    public void LoadNewScenario(string fileName)
+    {
+        StopAllCoroutines();
+        textFile = "texts/" + fileName;
+        Init();
+    }
+
+    /// <summary>
     /// メインシナリオループ：ページを一つずつ取り出して実行・表示する
     /// </summary>
     private IEnumerator RunScenarioLoop()
@@ -154,7 +177,7 @@ public class NovelEngine : MonoBehaviour
             mainText.text = string.Empty;
             subText.text = string.Empty;
 
-            currentOutputText.text = page.text;
+            currentOutputText.text = page.text ?? string.Empty;
             currentOutputText.maxVisibleCharacters = 0;
 
             _showCharsCoroutine = StartCoroutine(ShowChars(captionSpeed));

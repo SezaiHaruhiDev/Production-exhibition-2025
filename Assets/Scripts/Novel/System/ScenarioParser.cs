@@ -93,23 +93,24 @@ namespace Novel.System
                 if (string.IsNullOrWhiteSpace(c)) continue;
 
                 string[] parts = c.Split(SeparatorParam);
-                if (parts.Length < 2) continue;
-
                 var cmd = new Command();
                 cmd.type = parts[0].Trim();
 
-                string paramString = parts[1].Trim().Trim('"');
-                string[] kvPairs = paramString.Split(',');
-                foreach (string kv in kvPairs)
+                if (parts.Length >= 2)
                 {
-                    string[] kvSplit = kv.Split(':');
-                    if (kvSplit.Length == 2)
+                    string paramString = parts[1].Trim().Trim('"');
+                    string[] kvPairs = paramString.Split(',');
+                    foreach (string kv in kvPairs)
                     {
-                        cmd.parameters[kvSplit[0].Trim()] = kvSplit[1].Trim();
-                    }
-                    else
-                    {
-                        cmd.parameters[kvSplit[0].Trim()] = string.Empty;
+                        string[] kvSplit = kv.Split(':');
+                        if (kvSplit.Length == 2)
+                        {
+                            cmd.parameters[kvSplit[0].Trim()] = kvSplit[1].Trim();
+                        }
+                        else
+                        {
+                            cmd.parameters[kvSplit[0].Trim()] = string.Empty;
+                        }
                     }
                 }
                 list.Add(cmd);
