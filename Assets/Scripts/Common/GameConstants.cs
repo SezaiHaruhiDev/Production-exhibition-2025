@@ -11,6 +11,7 @@ namespace Common
         {
             public const string Formation = "FormationScene";
             public const string Battle = "BattleScene";
+            public const string Novel = "NovelScene";
         }
 
         public static class Prefs

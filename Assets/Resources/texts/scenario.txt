@@ -4,7 +4,6 @@
 &!flagres
 &!ui=textpanel:0
 &!title=name:序章
-&!skip=label:a
 
 &!ncr=name:robin,sprite:robin
 &!ncr=name:crow,sprite:crow_strangeform
@@ -174,7 +173,6 @@
 &「誰かの安堵する溜息の後、一面真っ暗だったこの空間に突然スポットライトが全体を照らし…そこでようやく全貌を知る。」
 
 &!bg=sprite:stage_battle
-&!bgm=new:theater
 &!ui=textpanel:1
 &!out=sub:false
 &!fc=name:robin
@@ -187,7 +185,6 @@
 &「息をつく間も無く襲い来る情報の波とスポットライトに浴びせられる熱にあてられ、私の意識はそこで途絶える事になった。」
 
 &!bg=sprite:black_bg
-&!bgm=p:0
 &!out=sub:true
 &!ui=textpanel:0
 &!cr=name:robin,show:0
@@ -660,12 +657,11 @@
 &!fc=name:robin
 &私「ずいぶんとまぁ…ちゃらんぽらんな人だな」
 
-#a-
 &!fc=name:crow
 &カラス「私は元からこういうものさ！受け入れてくれたまえ！」
 &カラス「さて…コホン、気を取り直してスズメ君、君は身の潔白を証明するために」
 &カラス「探偵として、駒鳥を殺した犯人を捜したまえ。」
 &カラス「そうする事でしか君の生き残る道は無いのだから」
-!movie=file:pv
+&!movie=file:pv
 &「」
 &!scene=name:NovelScene,scenario:scenario2

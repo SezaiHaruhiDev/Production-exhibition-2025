@@ -36,6 +36,7 @@
 &!cr=name:robin,show:1
 &!fc=name:robin
 &!tb=state:true
+&!bgm=new:normal
 &「あれから…推理の為に聞き込みを行おうとしていたが、一向に進展がない。」
 &「何よりも、一部の人間が調査に協力的ではないのだ。」
 &!tb=state:false
@@ -730,5 +731,5 @@
 
 &!fc=name:robin
 &私「さて…話を戻すけど、今回の演劇についてだ」
-&!scene=name:NovelScene,scenario:scenario4
+&!scene=name:NovelScene,scenario:scenario3
 

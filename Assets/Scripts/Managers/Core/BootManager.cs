@@ -15,10 +15,10 @@ public class BootManager : MonoBehaviour
         yield return LoadManager.Instance.InitializeCoroutine();
         yield return SoundManager.Instance.InitializeCoroutine();
 
-        Assert.IsTrue(PartyManager.Instance.PartyMemberIds.Count == PartyManager.Instance.MaxPartySize, 
+        Assert.IsTrue(PartyManager.Instance.PartyMemberIds.Count == PartyManager.Instance.MaxPartySize,
             "BootManager: Party size mismatch on boot.");
         SaveDataManager.Instance.UnlockCharacter(0);
 
-        SceneManager.LoadScene(GameConstants.Scenes.Formation);
+        SceneManager.LoadScene("StartScene");
     }
 }

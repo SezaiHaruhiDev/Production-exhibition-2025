@@ -38,6 +38,7 @@
 &!bg=sprite:stage_6
 
 &!fc=name:fish
+&!bgm=new:normal
 &魚「前回の相談では、かなり中途半端に終わってしまったのを皆覚えているな？」
 
 &!fc=name:crow
@@ -1944,7 +1945,7 @@
 &「カーテンの向こうから、拍手の音が響く。」
 &!tb=state:false
 
-
+&!bgm=new:theater
 &!cr=name:fish,show:0
 &!cr=name:crow,show:0
 &!cr=name:pigeons,show:0
@@ -2145,6 +2146,7 @@
 &「 違う、とも言い切れないけど、なんでこの人が知っているんだ。どうしてあいつにしか知らない事を。」
 &!bg=sprite:black_bg
 &!tb=state:false
+&!bgm=new:serious
 
 &!cr=name:main,show:0
 &!ncr=name:sparrow,sprite:true_robin
@@ -2209,6 +2211,7 @@
 
 &!bg=sprite:stage_6
 
+&!bgm=new:theater
 &!fc=name:main
 &!cr=name:main,show:1
 &!cr=name:sparrow,show:0
@@ -2247,7 +2250,9 @@
 &!ui=textpanel:0
 &!cr=name:robin,show:0
 &!bg=sprite:black_bg
+&!bgm=p:0
 &!wait=time:5
+
 
 &!ui=textpanel:1
 &!bg=sprite:stage_6
