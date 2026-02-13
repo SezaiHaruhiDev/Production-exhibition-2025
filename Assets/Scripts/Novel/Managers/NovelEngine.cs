@@ -10,6 +10,11 @@ using Novel.Data;
 using Novel.Managers;
 using UnityEngine.Assertions;
 using Common;
+using UnityEngine.Video;
+using UnityEngine.SceneManagement;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 /// <summary>
 /// ノベルゲームのメイン管理クラス（シナリオ解析、テキスト表示、コマンド実行）
@@ -34,7 +39,11 @@ public class NovelEngine : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private float captionSpeed = 0.05f;
-    [SerializeField] private string textFile = GameConstants.Resources.ScenarioDir;
+    [SerializeField] private string textFile = "texts/scenario";
+
+    [Header("Video Settings")]
+    [SerializeField] private VideoPlayer videoPlayer;
+    [SerializeField] private RawImage videoOutput;
 
     [Header("Managers")]
     [FormerlySerializedAs("charactermanager")]
@@ -63,6 +72,10 @@ public class NovelEngine : MonoBehaviour
     public Sprite ImageA => imageA;
     public Sprite ImageB => imageB;
 
+    public Image BmImage => backgroundImage;
+    public VideoPlayer VideoPlayer => videoPlayer;
+    public RawImage VideoOutput => videoOutput;
+    public bool IsDelaying => isDelaying;
     public bool SubFlag { get; set; } = false;
     public float CaptionSpeed { get => captionSpeed; set => captionSpeed = value; }
     #endregion
@@ -98,6 +111,10 @@ public class NovelEngine : MonoBehaviour
     {
         _parser = new ScenarioParser();
         _executor = new CommandExecutor(this);
+        
+        // 外部から指定されたシナリオ名があればそれを使う
+        textFile = "texts/" + ScenarioDataHolder.GetAndReset();
+        
         Init();
     }
 
@@ -169,7 +186,7 @@ public class NovelEngine : MonoBehaviour
             
             if (page.commands.Count > 0)
             {
-                _executor.Execute(page.commands);
+                yield return StartCoroutine(_executor.ExecuteCoroutine(page.commands));
                 continue;
             }
 
@@ -303,5 +320,79 @@ public class NovelEngine : MonoBehaviour
         {
             uiManager.FadeOutTitleUI();
         }
+    }
+
+    /// <summary>
+    /// 動画を再生する
+    /// </summary>
+    public IEnumerator PlayVideoRoutine(string videoName)
+    {
+        if (videoPlayer == null || videoOutput == null)
+        {
+            Debug.LogError("VideoPlayer or videoOutput is not assigned to NovelEngine.");
+            yield break;
+        }
+
+        // 操作とシナリオ進行をロック
+        isDelaying = true;
+        if (nextIcon != null) nextIcon.SetActive(false);
+        videoOutput.gameObject.SetActive(true);
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // WebGLの場合はURL指定必須。StreamingAssetsフォルダ内の動画を参照する
+        videoPlayer.source = VideoSource.Url;
+        videoPlayer.url = System.IO.Path.Combine(Application.streamingAssetsPath, "videos/" + videoName + ".mp4");
+#else
+        // 通常はResourcesからロードを試みる
+        Debug.Log($"Attempting to load video from Resources: videos/{videoName}");
+        VideoClip clip = Resources.Load<VideoClip>("videos/" + videoName);
+        if (clip != null)
+        {
+            Debug.Log("VideoClip loaded successfully from Resources.");
+            videoPlayer.source = VideoSource.VideoClip;
+            videoPlayer.clip = clip;
+        }
+        else
+        {
+            Debug.LogWarning("VideoClip not found in Resources. Falling back to StreamingAssets URL.");
+            // Resourcesにない場合はStreamingAssetsからのURL再生を試みる
+            videoPlayer.source = VideoSource.Url;
+            string path = System.IO.Path.Combine(Application.streamingAssetsPath, "videos/" + videoName);
+            
+            // エディタ（Mac）なら .mov も試せるようにする
+            if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
+            {
+                videoPlayer.url = path + ".mov";
+            }
+            else
+            {
+                videoPlayer.url = path + ".mp4";
+            }
+        }
+#endif
+
+        videoPlayer.Prepare();
+
+        while (!videoPlayer.isPrepared)
+        {
+            yield return null;
+        }
+
+        // 縦横比の自動調整
+        if (videoOutput.TryGetComponent<UnityEngine.UI.AspectRatioFitter>(out var fitter))
+        {
+            fitter.aspectRatio = (float)videoPlayer.width / (float)videoPlayer.height;
+        }
+
+        videoPlayer.Play();
+        
+        // 再生終了まで待機
+        while (videoPlayer.isPlaying)
+        {
+            yield return null;
+        }
+
+        videoOutput.gameObject.SetActive(false);
+        isDelaying = false;
     }
 }

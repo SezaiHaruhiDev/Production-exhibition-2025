@@ -54,6 +54,9 @@ namespace Common
                 public const string LoadScenario = "load";
                 public const string Flag = "flag";
                 public const string ResetFlags = "flagres";
+                public const string Movie = "movie";
+                public const string NextScenario = "next";
+                public const string SceneTransition = "scene";
             }
 
             public const string Zoom = "zoom";

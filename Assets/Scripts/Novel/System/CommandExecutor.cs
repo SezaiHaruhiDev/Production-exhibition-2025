@@ -1,7 +1,9 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using Novel.Data;
 using Novel.Managers;
 using Common;
@@ -25,9 +27,23 @@ namespace Novel.System
         /// </summary>
         public void Execute(List<Command> commands)
         {
+            _manager.StartCoroutine(ExecuteCoroutine(commands));
+        }
+
+        /// <summary>
+        /// コマンドリストを一個ずつ待機しながら実行する
+        /// </summary>
+        public IEnumerator ExecuteCoroutine(List<Command> commands)
+        {
             foreach (var cmd in commands)
             {
                 ProcessCommand(cmd);
+                
+                // コマンド実行によってウェイトや映像再生（IsDelaying = true）が発生した場合、それが終わるまで待機
+                while (_manager.IsDelaying)
+                {
+                    yield return null;
+                }
             }
         }
 
@@ -113,6 +129,15 @@ namespace Novel.System
                     break;
                 case GameConstants.NovelCommands.Types.ResetFlags:
                     ResetFlags(cmd);
+                    break;
+                case GameConstants.NovelCommands.Types.Movie:
+                    PlayMovie(cmd);
+                    break;
+                case GameConstants.NovelCommands.Types.NextScenario:
+                    SetNextScenario(cmd);
+                    break;
+                case GameConstants.NovelCommands.Types.SceneTransition:
+                    TransitionToScene(cmd);
                     break;
                 default:
                     Debug.LogWarning($"CommandExecutor: Unknown command type '{cmd.type}'");
@@ -291,6 +316,35 @@ namespace Novel.System
         private void ResetFlags(Command cmd)
         {
             _manager.FlagManager.ResetAll();
+        }
+
+        private void PlayMovie(Command cmd)
+        {
+            if (cmd.parameters.TryGetValue("file", out string fileName))
+            {
+                _manager.StartCoroutine(_manager.PlayVideoRoutine(fileName));
+            }
+        }
+
+        private void SetNextScenario(Command cmd)
+        {
+            if (cmd.parameters.TryGetValue("file", out string fileName))
+            {
+                ScenarioDataHolder.NextScenarioName = fileName;
+            }
+        }
+
+        private void TransitionToScene(Command cmd)
+        {
+            if (cmd.parameters.TryGetValue("scenario", out string nextScenario))
+            {
+                ScenarioDataHolder.NextScenarioName = nextScenario;
+            }
+
+            if (cmd.parameters.TryGetValue("name", out string sceneName))
+            {
+                SceneManager.LoadScene(sceneName);
+            }
         }
     }
 }
