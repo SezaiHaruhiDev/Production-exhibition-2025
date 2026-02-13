@@ -339,9 +339,9 @@ public class NovelEngine : MonoBehaviour
         videoOutput.gameObject.SetActive(true);
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-        // WebGLの場合はURL指定必須。StreamingAssetsフォルダ内の動画を参照する
+        // WebGLの場合はURL指定。スラッシュを明示的に使用
         videoPlayer.source = VideoSource.Url;
-        videoPlayer.url = System.IO.Path.Combine(Application.streamingAssetsPath, "videos/" + videoName + ".mp4");
+        videoPlayer.url = Application.streamingAssetsPath + "/videos/" + videoName + ".mp4";
 #else
         // 通常はResourcesからロードを試みる
         Debug.Log($"Attempting to load video from Resources: videos/{videoName}");
@@ -357,7 +357,7 @@ public class NovelEngine : MonoBehaviour
             Debug.LogWarning("VideoClip not found in Resources. Falling back to StreamingAssets URL.");
             // Resourcesにない場合はStreamingAssetsからのURL再生を試みる
             videoPlayer.source = VideoSource.Url;
-            string path = System.IO.Path.Combine(Application.streamingAssetsPath, "videos/" + videoName);
+            string path = Application.streamingAssetsPath + "/videos/" + videoName;
             
             // エディタ（Mac）なら .mov も試せるようにする
             if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
