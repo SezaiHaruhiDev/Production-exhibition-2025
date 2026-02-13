@@ -339,9 +339,10 @@ public class NovelEngine : MonoBehaviour
         videoOutput.gameObject.SetActive(true);
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-        // WebGLの場合はURL指定。スラッシュを明示的に使用
+        // WebGLの場合は相対パス（./）を明示。GitHub Pages等の階層に強い書き方
         videoPlayer.source = VideoSource.Url;
-        videoPlayer.url = Application.streamingAssetsPath + "/videos/" + videoName + ".mp4";
+        videoPlayer.url = "./StreamingAssets/videos/" + videoName + ".mp4";
+        Debug.Log("WebGL Video Path: " + videoPlayer.url);
 #else
         // 通常はResourcesからロードを試みる
         Debug.Log($"Attempting to load video from Resources: videos/{videoName}");
@@ -357,9 +358,9 @@ public class NovelEngine : MonoBehaviour
             Debug.LogWarning("VideoClip not found in Resources. Falling back to StreamingAssets URL.");
             // Resourcesにない場合はStreamingAssetsからのURL再生を試みる
             videoPlayer.source = VideoSource.Url;
+            // エディタやPCビルドでは従来通り
             string path = Application.streamingAssetsPath + "/videos/" + videoName;
             
-            // エディタ（Mac）なら .mov も試せるようにする
             if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
             {
                 videoPlayer.url = path + ".mov";
@@ -368,14 +369,26 @@ public class NovelEngine : MonoBehaviour
             {
                 videoPlayer.url = path + ".mp4";
             }
+            Debug.Log("Fallback Video Path: " + videoPlayer.url);
         }
 #endif
 
         videoPlayer.Prepare();
 
-        while (!videoPlayer.isPrepared)
+        float timeout = 10f; // 10秒でタイムアウト
+        float timer = 0f;
+        while (!videoPlayer.isPrepared && timer < timeout)
         {
+            timer += Time.deltaTime;
             yield return null;
+        }
+
+        if (timer >= timeout)
+        {
+            Debug.LogError($"Video Prepare Timeout: {videoPlayer.url} - Check if the file exists and is accessible.");
+            videoOutput.gameObject.SetActive(false);
+            isDelaying = false;
+            yield break;
         }
 
         // 縦横比の自動調整
