@@ -42,12 +42,14 @@ namespace Novel.System
                 _engine.OnClick();
             }
 
-            // フェードアウト処理
+            // 即座に画面を暗くし、1秒後に遷移する
             if (fadeCanvasGroup != null)
             {
                 fadeCanvasGroup.gameObject.SetActive(true);
-                fadeCanvasGroup.alpha = 0f;
-                fadeCanvasGroup.DOFade(1f, fadeDuration).OnComplete(() =>
+                fadeCanvasGroup.alpha = 1f; // 即座に真っ暗に
+                
+                // 1秒待機してから遷移
+                DOVirtual.DelayedCall(1f, () =>
                 {
                     PerformSceneChange();
                 });

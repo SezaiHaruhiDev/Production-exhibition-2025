@@ -1,8 +1,8 @@
 #start -
+&!ui=textpanel:0
 &!bg=sprite:black_bg
 &!out=sub:true
 &!flagres
-&!ui=textpanel:0
 &!title=name:序章
 
 &!ncr=name:robin,sprite:robin
@@ -124,6 +124,7 @@
 &!cr=name:bull,show:0
 
 &!cr=name:pigeons,show:1
+&!fc=name:pigeons
 &？？？「は？冗談、まだ一回目なのに最初からこんな事ある？」
 &!cr=name:pigeons,show:0
 
@@ -155,10 +156,11 @@
 
 &!fc=name:robin
 &!bgm=p:0
+&!shake=value:5
 &私「…！」
 &!cr=name:crow,show:0
 !cr=name:robin,show:0
-&!shake=value:5
+
 &!bg =sprite:black_bg
 &!out=sub:true
 &!ui=textpanel:0
@@ -171,23 +173,13 @@
 &「私はその手を振り解こうと必死だったが、片足がブラリと空を遊び」
 &「少しの浮遊感に肝の冷える感覚を覚え、手首を掴んだその人にぐいと引っ張られて地に足を付けた。」
 &「誰かの安堵する溜息の後、一面真っ暗だったこの空間に突然スポットライトが全体を照らし…そこでようやく全貌を知る。」
-
-&!bg=sprite:stage_battle
-&!ui=textpanel:1
-&!out=sub:false
-&!fc=name:robin
-&!tb=state:true
-!cr=name:robin,show:1
-
 &「私が落ちようとしていた場所は底の見えない奈落で、この立っている場所は舞台で、そして、」
 &「誰もかれもがまともな頭を持っていない異形達。」
 
 &「息をつく間も無く襲い来る情報の波とスポットライトに浴びせられる熱にあてられ、私の意識はそこで途絶える事になった。」
 
 &!bg=sprite:black_bg
-&!out=sub:true
 &!ui=textpanel:0
-&!cr=name:robin,show:0
 
 &「しばらくして…」
 
@@ -210,6 +202,7 @@
 &!bg=sprite:stage_6
 &!bgm=new:normal
 
+&!cr=name:robin,show:1
 &「音を立てて水バケツをひっくり返した音がハッキリと耳に入る。」
 &「寸での所でようやく目が覚め、頭から水を被るのを回避できたが、どうやら私の使っていた寝床…」
 &「いや、布切れたちがいくつかビショビショになってしまっていた。」

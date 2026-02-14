@@ -32,24 +32,17 @@ public class CharacterManager : MonoBehaviour
         GameObject go = Instantiate(characterImagePrefab, parent);
         Image newImage = go.GetComponent<Image>();
 
+        // 初期状態で非表示にする（あとでパラメータに基づいて制御）
+        newImage.enabled = false;
+
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Name, out string str))
         {
             newImage.name = str;
             _characterCache[str] = newImage;
         }
 
-        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Sprite, out string spstr))
-        {
-            Sprite sp = Resources.Load<Sprite>(spritesDirectory + spstr);
-            if (sp != null)
-            {
-                newImage.sprite = sp;
-            }
-            else
-            {
-                Debug.LogError($"CharacterManager: Sprite not found at {spritesDirectory}{spstr}");
-            }
-        }
+        // 全パラメータを一括適用
+        ApplyCommandParameters(cmd, newImage);
     }
 
     /// <summary>
@@ -64,45 +57,7 @@ public class CharacterManager : MonoBehaviour
             return;
         }
 
-        RectTransform rt = img.GetComponent<RectTransform>();
-
-        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Size, out string sizeStr))
-        {
-            // Format: "width^height"
-            string[] parts = sizeStr.Split('^');
-            if (parts.Length == 2 &&
-                float.TryParse(parts[0], out float width) &&
-                float.TryParse(parts[1], out float height))
-            {
-                img.rectTransform.sizeDelta = new Vector2(width, height);
-            }
-        }
-
-        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Pos, out string posStr))
-        {
-            // Format: "x^y"
-            string[] parts = posStr.Split('^');
-            if (parts.Length == 2 &&
-                int.TryParse(parts[0], out int x) &&
-                int.TryParse(parts[1], out int y))
-            {
-                rt.anchoredPosition = new Vector2(x, y);
-            }
-        }
-
-        if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Col, out string colStr))
-        {
-            // Format: "r^g^b^a"
-            string[] parts = colStr.Split('^');
-            if (parts.Length >= 4 &&
-                int.TryParse(parts[0], out int r) &&
-                int.TryParse(parts[1], out int g) &&
-                int.TryParse(parts[2], out int b) &&
-                int.TryParse(parts[3], out int a))
-            {
-                img.color = new Color(r / 255f, g / 255f, b / 255f, a / 255f);
-            }
-        }
+        ApplyCommandParameters(cmd, img);
     }
 
     /// <summary>
@@ -117,6 +72,19 @@ public class CharacterManager : MonoBehaviour
             return;
         }
 
+        ApplyCommandParameters(cmd, img);
+    }
+
+    /// <summary>
+    /// コマンドのパラメータをImage/RectTransformに適用する
+    /// </summary>
+    private void ApplyCommandParameters(Command cmd, Image img)
+    {
+        if (img == null) return;
+
+        RectTransform rt = img.rectTransform;
+
+        // スプライト
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Sprite, out string spstr))
         {
             Sprite sp = Resources.Load<Sprite>(spritesDirectory + spstr);
@@ -130,15 +98,14 @@ public class CharacterManager : MonoBehaviour
             }
         }
 
+        // 表示・非表示
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Show, out string showStr) &&
             int.TryParse(showStr, out int showState))
         {
-            if (img != null) img.enabled = (showState == 1);
+            img.enabled = (showState == 1);
         }
 
-        // Add support for Transform parameters (Size, Pos, Color) in ChangeCharacter
-        RectTransform rt = img.GetComponent<RectTransform>();
-
+        // サイズ (Format: "width^height")
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Size, out string sizeStr))
         {
             string[] parts = sizeStr.Split('^');
@@ -146,10 +113,11 @@ public class CharacterManager : MonoBehaviour
                 float.TryParse(parts[0], out float width) &&
                 float.TryParse(parts[1], out float height))
             {
-                img.rectTransform.sizeDelta = new Vector2(width, height);
+                rt.sizeDelta = new Vector2(width, height);
             }
         }
 
+        // 位置 (Format: "x^y")
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Pos, out string posStr))
         {
             string[] parts = posStr.Split('^');
@@ -161,6 +129,7 @@ public class CharacterManager : MonoBehaviour
             }
         }
 
+        // 色 (Format: "r^g^b^a")
         if (cmd.parameters.TryGetValue(GameConstants.NovelCommands.Col, out string colStr))
         {
             string[] parts = colStr.Split('^');
