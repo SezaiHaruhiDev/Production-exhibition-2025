@@ -732,5 +732,20 @@
 
 &!fc=name:robin
 &私「さて…話を戻すけど、今回の演劇についてだ」
+&!bgm=p:0
+&!bg=sprite:black_bg
+&!cr=name:crow,show:0
+&!cr=name:thrush,show:0
+&!cr=name:flies,show:0
+&!cr=name:fish,show:0
+&!cr=name:pigeons,show:0
+&!cr=name:wren,show:0
+&!cr=name:owl,show:0
+&!cr=name:beetle,show:0
+&!cr=name:tobi,show:0
+&!cr=name:goldfinch,show:0
+&!cr=name:skylark,show:0
+&!cr=name:robin,show:0
+&!ui=textpanel:0
 &!scene=name:NovelScene,scenario:scenario3
 
