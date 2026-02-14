@@ -338,40 +338,26 @@ public class NovelEngine : MonoBehaviour
         if (nextIcon != null) nextIcon.SetActive(false);
         videoOutput.gameObject.SetActive(true);
 
-#if UNITY_WEBGL && !UNITY_EDITOR
-        // WebGLの場合は相対パス（./）を明示。GitHub Pages等の階層に強い書き方
+        // すべてのプラットフォームでURL指定再生に統一（StreamingAssets内を参照）
         videoPlayer.source = VideoSource.Url;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // WebGL: GitHub Pages等の階層に強い相対パス形式
         videoPlayer.url = "./StreamingAssets/videos/" + videoName + ".mp4";
-        Debug.Log("WebGL Video Path: " + videoPlayer.url);
 #else
-        // 通常はResourcesからロードを試みる
-        Debug.Log($"Attempting to load video from Resources: videos/{videoName}");
-        VideoClip clip = Resources.Load<VideoClip>("videos/" + videoName);
-        if (clip != null)
+        // Editor / Standalone: streamingAssetsPath を使用
+        string path = Application.streamingAssetsPath + "/videos/" + videoName;
+        // macOS/iOS環境への配慮（必要。mp4が再生できない場合のフォールバックではない）
+        if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.IPhonePlayer)
         {
-            Debug.Log("VideoClip loaded successfully from Resources.");
-            videoPlayer.source = VideoSource.VideoClip;
-            videoPlayer.clip = clip;
+            videoPlayer.url = path + ".mov";
         }
         else
         {
-            Debug.LogWarning("VideoClip not found in Resources. Falling back to StreamingAssets URL.");
-            // Resourcesにない場合はStreamingAssetsからのURL再生を試みる
-            videoPlayer.source = VideoSource.Url;
-            // エディタやPCビルドでは従来通り
-            string path = Application.streamingAssetsPath + "/videos/" + videoName;
-            
-            if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
-            {
-                videoPlayer.url = path + ".mov";
-            }
-            else
-            {
-                videoPlayer.url = path + ".mp4";
-            }
-            Debug.Log("Fallback Video Path: " + videoPlayer.url);
+            videoPlayer.url = path + ".mp4";
         }
 #endif
+        Debug.Log("Video URL: " + videoPlayer.url);
 
         videoPlayer.Prepare();
 

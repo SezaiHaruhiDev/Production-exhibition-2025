@@ -2,7 +2,7 @@
 &!bg=sprite:stage_6
 &!flagres
 &!out=sub:false
-&!ui=textpanel:1
+&!ui=textpanel:0
 
 &!ncr=name:robin,sprite:robin
 &!ncr=name:crow,sprite:crow_strangeform
@@ -35,6 +35,7 @@
 
 &!cr=name:robin,show:1
 &!fc=name:robin
+&!ui=textpanel:1
 &!tb=state:true
 &!bgm=new:normal
 &「あれから…推理の為に聞き込みを行おうとしていたが、一向に進展がない。」

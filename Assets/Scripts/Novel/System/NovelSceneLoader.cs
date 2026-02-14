@@ -24,6 +24,7 @@ namespace Novel.System
         [SerializeField] private CanvasGroup fadeCanvasGroup;
 
         private NovelEngine _engine;
+        private bool _isTransitioning = false;
 
         private void Start()
         {
@@ -36,23 +37,24 @@ namespace Novel.System
         /// </summary>
         public void LoadWithFade()
         {
+            // 二重遷移防止
+            if (_isTransitioning) return;
+            _isTransitioning = true;
+
             // もしノベルエンジンがあれば、テキスト送り（OnClick）を1回呼び出す
             if (_engine != null)
             {
                 _engine.OnClick();
             }
 
-            // 即座に画面を暗くし、1秒後に遷移する
+            // 指定された秒数かけてフェードアウトし、完了後に遷移する
             if (fadeCanvasGroup != null)
             {
                 fadeCanvasGroup.gameObject.SetActive(true);
-                fadeCanvasGroup.alpha = 1f; // 即座に真っ暗に
-                
-                // 1秒待機してから遷移
-                DOVirtual.DelayedCall(1f, () =>
-                {
-                    PerformSceneChange();
-                });
+                fadeCanvasGroup.alpha = 0f;
+                fadeCanvasGroup.DOFade(1f, fadeDuration)
+                    .SetLink(gameObject)
+                    .OnComplete(PerformSceneChange);
             }
             else
             {
