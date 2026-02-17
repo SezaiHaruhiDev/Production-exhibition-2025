@@ -23,8 +23,8 @@ MonoBehaviour:
   def: 10
   exp: 0
   level: 0
-  speed: 9
+  speed: 10
   growthTable: {fileID: 11400000, guid: d5d550bd6b47b1248a83fc638d4bf54e, type: 2}
-  skillId: 0000000000000000
+  skillId: 01000000
   ultimateSkillId: 0
   downSprite: {fileID: 21300000, guid: 2443ffa1ed3b28b4fbbdfd77bb198e0a, type: 3}

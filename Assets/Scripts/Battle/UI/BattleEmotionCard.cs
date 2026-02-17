@@ -164,14 +164,29 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
         }
     }
 
+    private BattleUIManager _uiManager;
+
+    private void Start()
+    {
+        _uiManager = Object.FindFirstObjectByType<BattleUIManager>();
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         _isHovered = true;
+        if (_uiManager != null && Data != null)
+        {
+            _uiManager.ShowCardDescription(Data);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         _isHovered = false;
+        if (_uiManager != null)
+        {
+            _uiManager.HideDescription();
+        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -179,6 +194,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
         _isDragging = true;
         _startDragPosition = transform.position;
         canvasGroup.blocksRaycasts = false;
+        if (_uiManager != null) _uiManager.HideDescription();
     }
 
     public void OnDrag(PointerEventData eventData)

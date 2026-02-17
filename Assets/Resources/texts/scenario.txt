@@ -66,14 +66,14 @@
 &!cr=name:beetle,show:1
 &!tb=state:false
 
-&!fc=name:bull
+&!fc=name:beetle
 &？？？「ハァ…一体何をしているの…」
 
 
 &!fc=name:thrush
 &？？？「…あれ～…こんなの脚本にあったっけ？」
 
-&!fc=name:beetle
+&!fc=name:bull
 &？？？「少なくとも、私の脚本には書かれておらぬ…」
 
 &!fc=name:robin

@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 /// <summary>
 /// スキル選択ボタン（ドロップ受け入れ機能付き）
 /// </summary>
-public class BattleSkillButton : MonoBehaviour
+public class BattleSkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Button button;
     [SerializeField] private Image skillIconImage;
@@ -98,6 +98,22 @@ public class BattleSkillButton : MonoBehaviour
         if (_manager != null)
         {
             _manager.OnSkillSelected(_currentSkill);
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (_manager != null && _currentSkill != null)
+        {
+            _manager.ShowSkillDescription(_currentSkill);
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (_manager != null)
+        {
+            _manager.HideDescription();
         }
     }
 }

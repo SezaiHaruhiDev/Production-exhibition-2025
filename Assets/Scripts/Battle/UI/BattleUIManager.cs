@@ -42,6 +42,9 @@ public class BattleUIManager : MonoBehaviour
 
     private bool _wasUltimateReady = false;
 
+    [Header("Skill Description")]
+    [SerializeField] private SkillDescriptionPanel descriptionPanel;
+
     [Header("Data")]
     [SerializeField] private SkillDatabaseSO skillDatabase;
 
@@ -144,11 +147,13 @@ public class BattleUIManager : MonoBehaviour
                     _deckManager.AddCard(card);
                 }
                 UpdateButtonsUsability();
+                if (SelectedSkill != null) ShowSkillDescription(SelectedSkill);
             };
             cardSlot.OnCardSet += (card) => 
             {
                 if (_deckManager != null) _deckManager.RemoveCardFromHand(card);
                 UpdateButtonsUsability();
+                if (SelectedSkill != null) ShowSkillDescription(SelectedSkill);
             };
         }
 
@@ -258,6 +263,8 @@ public class BattleUIManager : MonoBehaviour
         if (drawButton != null) drawButton.gameObject.SetActive(false);
         if (promptText != null) promptText.gameObject.SetActive(false);
         SetInteraction(false);
+        SelectedSkill = null; // スキル選択解除
+        ForceHideDescription();
     }
 
     /// <summary>
@@ -293,10 +300,14 @@ public class BattleUIManager : MonoBehaviour
         if (SelectedSkill == skill)
         {
             SelectedSkill = null;
+            HideDescription();
+            if (promptText != null) promptText.text = "スキルを選択して発動してください";
         }
         else
         {
             SelectedSkill = skill;
+            ShowSkillDescription(skill);
+            if (promptText != null) promptText.text = "ターゲットを選択してください";
         }
     }
 
@@ -397,6 +408,12 @@ public class BattleUIManager : MonoBehaviour
         _isInUltimateSelection = true;
         UIEffectSpawner.Instance?.Play();
         
+        if (promptText != null)
+        {
+            promptText.text = "必殺技を発動する味方を選択してください";
+            promptText.gameObject.SetActive(true);
+        }
+
         // 既存の（通常ターンの）ターゲット選択をすべて解除
         if (_turnManager != null && _turnManager.UnitManager != null)
         {
@@ -434,6 +451,9 @@ public class BattleUIManager : MonoBehaviour
         if (!_isInUltimateSelection) return;
         
         PlayTargetSelectSE();
+        
+        if (promptText != null) promptText.text = "必殺技の対象を選択してください";
+
         // 選択された味方を保持
         _tempUltimateActor = unit;
         _tempUltimateSkill = _turnManager.GetSkillData(unit.Data.ultimateSkillId);
@@ -444,6 +464,9 @@ public class BattleUIManager : MonoBehaviour
             CancelUltimateSelection();
             return;
         }
+
+        // 必殺技の説明を表示
+        ShowSkillDescription(_tempUltimateSkill);
 
         // 以前のリスナーを解除
         foreach (var u in _turnManager.UnitManager.AllUnits)
@@ -530,6 +553,9 @@ public class BattleUIManager : MonoBehaviour
     private void FinalizeUltimate(List<BattleUnit> targets)
     {
         _isInUltimateSelection = false;
+        ForceHideDescription();
+        
+        if (promptText != null) promptText.gameObject.SetActive(false);
 
         // すべてのリスナーと選択状態を解除
         foreach (var u in _turnManager.UnitManager.AllUnits)
@@ -553,6 +579,8 @@ public class BattleUIManager : MonoBehaviour
     {
         _isInUltimateSelection = false;
         
+        if (promptText != null) promptText.gameObject.SetActive(false);
+
         foreach (var u in _turnManager.UnitManager.AllUnits)
         {
             u.OnSelected -= OnUltimateUnitSelected;
@@ -645,5 +673,57 @@ public class BattleUIManager : MonoBehaviour
         yield return rect.DOAnchorPos(new Vector2(1200f, 0f), 0.5f).SetEase(Ease.InBack).WaitForCompletion();
         
         rect.anchoredPosition = Vector2.zero;
+    }
+
+    /// <summary>
+    /// スキルの説明を表示する
+    /// </summary>
+    public void ShowSkillDescription(SkillData skill)
+    {
+        if (descriptionPanel != null)
+        {
+            descriptionPanel.ShowSkill(skill, SelectedEmotion);
+        }
+    }
+
+    /// <summary>
+    /// カードの説明を表示する
+    /// </summary>
+    public void ShowCardDescription(EmotionCardData card)
+    {
+        if (descriptionPanel != null)
+        {
+            descriptionPanel.ShowCard(card);
+        }
+    }
+
+    /// <summary>
+    /// 説明パネルを非表示にする（スキル選択中ならその説明に戻す）
+    /// </summary>
+    public void HideDescription()
+    {
+        if (_isInUltimateSelection && _tempUltimateSkill != null)
+        {
+            ShowSkillDescription(_tempUltimateSkill);
+        }
+        else if (SelectedSkill != null)
+        {
+            ShowSkillDescription(SelectedSkill);
+        }
+        else if (descriptionPanel != null)
+        {
+            descriptionPanel.Hide();
+        }
+    }
+
+    /// <summary>
+    /// 説明パネルを強制的に非表示にする
+    /// </summary>
+    public void ForceHideDescription()
+    {
+        if (descriptionPanel != null)
+        {
+            descriptionPanel.Hide();
+        }
     }
 }

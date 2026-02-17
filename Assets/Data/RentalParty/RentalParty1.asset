@@ -23,7 +23,7 @@ MonoBehaviour:
     atk: 10
     def: 10
     exp: 0
-    speed: 10
+    speed: 40
     skillId: 
   - baseAlly: {fileID: 11400000, guid: 63f699a0f0e61eb43a51f74e3e3da5fa, type: 2}
     name: "\u30DF\u30E4\u30DE\u30AC\u30E9\u30B9"
