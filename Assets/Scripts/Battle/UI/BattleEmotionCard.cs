@@ -168,7 +168,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
 
     private void Start()
     {
-        _uiManager = Object.FindFirstObjectByType<BattleUIManager>();
+        _uiManager = Object.FindAnyObjectByType<BattleUIManager>();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -222,7 +222,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
             // すでに消費されているカード同士での合成を防ぐ
             if (droppedCardUI.IsConsumed || this.IsConsumed) return;
 
-            var deckManager = Object.FindFirstObjectByType<EmotionDeckManager>();
+            var deckManager = Object.FindAnyObjectByType<EmotionDeckManager>();
             if (deckManager != null)
             {
                 // 楽観的ロック：合成処理中にUI更新が走った際、これらが「使用済み」とみなされるように先にフラグを立てる

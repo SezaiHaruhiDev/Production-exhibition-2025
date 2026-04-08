@@ -27,7 +27,7 @@ public class CameraFocusManager : MonoBehaviour
     private void Awake()
     {
         if (characterManager == null)
-            characterManager = FindFirstObjectByType<CharacterManager>();
+            characterManager = FindAnyObjectByType<CharacterManager>();
 
         Assert.IsNotNull(zoomRoot, "CameraFocusManager: ZoomRoot is not assigned.");
         Assert.IsNotNull(characterParent, "CameraFocusManager: CharacterParent is not assigned.");

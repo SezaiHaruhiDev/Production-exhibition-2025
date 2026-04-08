@@ -16,7 +16,7 @@ public class TurnManager : MonoBehaviour
         PlayerTurn,
         EnemyTurn,
         Won,
-        Lost
+        Lost,
     }
 
     [Header("References")]
@@ -45,7 +45,7 @@ public class TurnManager : MonoBehaviour
     public int BattleCurrentMP => battleCurrentMp;
 
     [Header("Ultimate System")]
-    [SerializeField] private float battleUltimateGauge; // 0.0 to 100.0
+    [SerializeField] private float battleUltimateGauge;
     public float BattleUltimateGauge => battleUltimateGauge;
     public bool IsUltimateReady => battleUltimateGauge >= 100f;
     private bool _isInterrupting = false;
@@ -78,9 +78,9 @@ public class TurnManager : MonoBehaviour
     private void Awake()
     {
         if (unitManager == null) unitManager = GetComponent<UnitManager>();
-        if (battleUI == null) battleUI = FindFirstObjectByType<BattleUIManager>();
+        if (battleUI == null) battleUI = FindAnyObjectByType<BattleUIManager>();
         if (deckManager == null) deckManager = GetComponent<EmotionDeckManager>();
-        if (presentationManager == null) presentationManager = FindFirstObjectByType<BattlePresentationManager>();
+        if (presentationManager == null) presentationManager = FindAnyObjectByType<BattlePresentationManager>();
 
         Assert.IsNotNull(battleDatabaseSO, "TurnManager: BattleDatabaseSO is not assigned.");
         Assert.IsNotNull(skillDatabaseSO, "TurnManager: SkillDatabaseSO is not assigned.");
@@ -187,7 +187,7 @@ public class TurnManager : MonoBehaviour
         state = BattleState.PlayerTurn;
         battleUltimateGauge = 0;
         OnUltimateChanged?.Invoke(battleUltimateGauge, 100f);
-        
+
         StartCoroutine(RunBattleLoop());
         StartCoroutine(UltimateInterruptionProcessor());
     }
@@ -202,11 +202,11 @@ public class TurnManager : MonoBehaviour
             if (CheckBattleOver()) yield break;
 
             var activeUnits = unitManager.ActiveUnits;
-            if (activeUnits.Count == 0) yield break; 
+            if (activeUnits.Count == 0) yield break;
 
             // 一番早くターンが回ってくるまでの時間（Action Value）を計算
             float minTime = activeUnits.Min(u => u.Data.GetRemainingTime(ACTION_GAUGE_GOAL));
-            
+
             // 時間を進める
             foreach (var unit in activeUnits)
             {
@@ -236,7 +236,7 @@ public class TurnManager : MonoBehaviour
 
                 while (_isInterrupting) yield return null;
                 yield return StartCoroutine(UnitTurn(actionCharacter));
-                
+
                 // 目標値を「引く」ことで、オーバーした分の速度を次回のターンに持ち越す
                 actionCharacter.Data.currentActionGauge -= ACTION_GAUGE_GOAL;
             }
@@ -265,7 +265,7 @@ public class TurnManager : MonoBehaviour
     private void EndBattle()
     {
         SoundManager.Instance.StopBGM();
-        
+
         if (presentationManager != null)
         {
             StartCoroutine(presentationManager.PlayBattleEndSequence(state == BattleState.Won));
@@ -283,7 +283,7 @@ public class TurnManager : MonoBehaviour
     {
         ActiveUnit = unit;
         if (presentationManager != null) presentationManager.SetAmbientFocus(unit);
-        
+
         unit.SetTurnActive(true);
         _skipTurnRequested = false;
         while (_isInterrupting) yield return null;
@@ -383,8 +383,7 @@ public class TurnManager : MonoBehaviour
                     if (_skipTurnRequested)
                     {
                         AddMP(SKIP_TURN_MP_RECOVERY);
-                        
-                        // 全てのターゲットマークを消去
+
                         foreach (var u in unitManager.AllUnits)
                         {
                             u.SetSelectable(false);
@@ -412,7 +411,7 @@ public class TurnManager : MonoBehaviour
                     // ここでは単に「捨て札に送る」だけでよい。
                     // notifyHand: false にすることで、手札UIの再描画による意図しない2重消費を防ぐ。
                     deckManager.DiscardCard(currentEmotion, false);
-                    
+
                     if (battleUI != null) battleUI.ClearSlot();
                 }
 
@@ -423,7 +422,7 @@ public class TurnManager : MonoBehaviour
                         ConsumeMP(currentSkill.imaginationCost);
                     }
                     AddUltimateCharge(currentSkill.ultimateChargeValue);
-                    
+
                     // ここで非同期実行を待つ
                     yield return StartCoroutine(SkillExecutor.ExecuteAsync(unit, selectedTargets, currentSkill, currentEmotion, presentationManager));
                 }
@@ -434,7 +433,7 @@ public class TurnManager : MonoBehaviour
         else
         {
             state = BattleState.EnemyTurn;
-            
+
             // 敵ターン時も行動キャラを強調
             if (presentationManager != null) presentationManager.SetOtherUnitsTransparency(unit, null, 0.3f);
 
@@ -499,10 +498,10 @@ public class TurnManager : MonoBehaviour
                         isSelectable = !unit.Data.isAlly;
                         break;
                     case SkillTargetType.AllAllies:
-                         isSelectable = unit.Data.isAlly;
-                         break;
+                        isSelectable = unit.Data.isAlly;
+                        break;
                     case SkillTargetType.SingleAlly:
-                         isSelectable = unit.Data.isAlly;
+                        isSelectable = unit.Data.isAlly;
                         break;
                 }
 
@@ -652,10 +651,10 @@ public class TurnManager : MonoBehaviour
     public void EnqueueUltimate(BattleUnit unit, List<BattleUnit> targets)
     {
         _ultimateQueue.Enqueue(new UltimateAction { actor = unit, targets = targets });
-        Time.timeScale = 1.0f; 
+        Time.timeScale = 1.0f;
         _isInterrupting = false;
-        
-        battleUltimateGauge = 0; 
+
+        battleUltimateGauge = 0;
         OnUltimateChanged?.Invoke(battleUltimateGauge, 100f);
     }
 
@@ -670,7 +669,7 @@ public class TurnManager : MonoBehaviour
             {
                 var action = _ultimateQueue.Dequeue();
                 yield return StartCoroutine(ExecuteUltimate(action.actor, action.targets));
-                
+
                 // 必殺技実行後にも即座に勝敗判定を行う
                 if (CheckBattleOver()) yield break;
 

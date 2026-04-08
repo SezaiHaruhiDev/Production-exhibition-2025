@@ -125,7 +125,7 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
         if (Data.currentHp <= 0)
         {
             var manager = GetComponentInParent<UnitManager>();
-            if (manager == null) manager = FindFirstObjectByType<UnitManager>();
+            if (manager == null) manager = FindAnyObjectByType<UnitManager>();
             
             manager?.OnUnitDead(this);
         }

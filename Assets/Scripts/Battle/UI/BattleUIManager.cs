@@ -25,7 +25,7 @@ public class BattleUIManager : MonoBehaviour
 
     [Header("Shared Resources")]
     [SerializeField] private SharedMPBarUI mpBar;
-    [SerializeField] private UltimateGaugeController ultGauge; 
+    [SerializeField] private UltimateGaugeController ultGauge;
     [SerializeField] private Button ultimateButton;
     [SerializeField] private Button turnEndButton;
     [SerializeField] private Button drawButton;
@@ -56,19 +56,19 @@ public class BattleUIManager : MonoBehaviour
     /// 現在選択されているスキル
     /// </summary>
     public SkillData SelectedSkill { get; private set; }
-    
+
     /// <summary>
     /// 現在選択されている感情カード
     /// </summary>
     public EmotionCardData SelectedEmotion => cardSlot != null ? cardSlot.CurrentCard : null;
-    
+
     /// <summary>
     /// スキルが選択されているかどうか
     /// </summary>
     public bool IsSkillSelected => SelectedSkill != null;
     public bool IsInUltimateSelection => _isInUltimateSelection;
     public bool IsSkillPanelActive => skillPanelRoot != null && skillPanelRoot.activeSelf;
-    
+
     private bool _isInUltimateSelection = false;
     private BattleUnit _tempUltimateActor;
     private SkillData _tempUltimateSkill;
@@ -78,7 +78,7 @@ public class BattleUIManager : MonoBehaviour
 
     private void Awake()
     {
-        _deckManager = FindFirstObjectByType<EmotionDeckManager>();
+        _deckManager = FindAnyObjectByType<EmotionDeckManager>();
 
         if (handArea != null && handArea.GetComponent<HandLayoutGroup>() == null)
         {
@@ -92,22 +92,22 @@ public class BattleUIManager : MonoBehaviour
         }
         if (battleStartGroup != null) battleStartGroup.alpha = 0f;
         skillPanelRoot.SetActive(false);
-        
-        if (cardSlot == null) cardSlot = FindFirstObjectByType<CardSlotUI>();
 
-        _turnManager = FindFirstObjectByType<TurnManager>();
+        if (cardSlot == null) cardSlot = FindAnyObjectByType<CardSlotUI>();
+
+        _turnManager = FindAnyObjectByType<TurnManager>();
         if (_turnManager != null)
         {
-            _turnManager.OnMPChanged += (current, max) => 
+            _turnManager.OnMPChanged += (current, max) =>
             {
                 if (mpBar != null) mpBar.UpdateView(current, max);
                 UpdateButtonsUsability();
             };
 
-            _turnManager.OnUltimateChanged += (current, max) => 
+            _turnManager.OnUltimateChanged += (current, max) =>
             {
                 if (ultGauge != null) ultGauge.UpdateView(current, max);
-                
+
                 bool isReady = (current >= max);
                 if (ultimateButton != null) ultimateButton.interactable = isReady;
 
@@ -122,7 +122,7 @@ public class BattleUIManager : MonoBehaviour
                 _wasUltimateReady = isReady;
             };
 
-            _turnManager.OnTurnCountChanged += (turn) => 
+            _turnManager.OnTurnCountChanged += (turn) =>
             {
                 if (turnText != null) turnText.text = $"TURN:{turn:D2}";
             };
@@ -130,7 +130,7 @@ public class BattleUIManager : MonoBehaviour
 
         if (_deckManager != null)
         {
-            _deckManager.OnHandChanged += () => 
+            _deckManager.OnHandChanged += () =>
             {
                 UpdateHandView(_deckManager.Hand);
                 UpdateButtonsUsability(); // 手札枚数が変わったのでドローボタンの状態も更新
@@ -139,9 +139,9 @@ public class BattleUIManager : MonoBehaviour
 
         if (cardSlot != null)
         {
-            cardSlot.OnCardRemoved += (card) => 
+            cardSlot.OnCardRemoved += (card) =>
             {
-                if (_deckManager != null) 
+                if (_deckManager != null)
                 {
                     _cardsRequestingNoAnimation.Add(card);
                     _deckManager.AddCard(card);
@@ -149,7 +149,7 @@ public class BattleUIManager : MonoBehaviour
                 UpdateButtonsUsability();
                 if (SelectedSkill != null) ShowSkillDescription(SelectedSkill);
             };
-            cardSlot.OnCardSet += (card) => 
+            cardSlot.OnCardSet += (card) =>
             {
                 if (_deckManager != null) _deckManager.RemoveCardFromHand(card);
                 UpdateButtonsUsability();
@@ -165,7 +165,7 @@ public class BattleUIManager : MonoBehaviour
 
         if (turnEndButton != null)
         {
-            turnEndButton.onClick.AddListener(() => 
+            turnEndButton.onClick.AddListener(() =>
             {
                 ResetSlotToHand();
                 _turnManager.RequestTurnSkip();
@@ -175,11 +175,11 @@ public class BattleUIManager : MonoBehaviour
 
         if (drawButton != null)
         {
-            drawButton.onClick.AddListener(() => 
+            drawButton.onClick.AddListener(() =>
             {
                 if (_deckManager != null && _turnManager != null)
                 {
-                    if (_turnManager.BattleCurrentMP >= DRAW_MP_COST && 
+                    if (_turnManager.BattleCurrentMP >= DRAW_MP_COST &&
                         _deckManager.Hand.Count < _deckManager.MaxHandSize &&
                         _deckManager.CanDraw)
                     {
@@ -202,7 +202,7 @@ public class BattleUIManager : MonoBehaviour
             // 初期表示の同期
             if (mpBar != null) mpBar.UpdateView(_turnManager.BattleCurrentMP, _turnManager.BattleMaxMP);
             if (ultGauge != null) ultGauge.UpdateView(_turnManager.BattleUltimateGauge, 100f);
-            
+
             UpdateButtonsUsability();
         }
     }
@@ -284,7 +284,7 @@ public class BattleUIManager : MonoBehaviour
         {
             var card = cardSlot.CurrentCard;
             cardSlot.Clear();
-            var deckManager = FindFirstObjectByType<EmotionDeckManager>();
+            var deckManager = FindAnyObjectByType<EmotionDeckManager>();
             if (deckManager != null)
             {
                 deckManager.AddCard(card);
@@ -314,7 +314,7 @@ public class BattleUIManager : MonoBehaviour
     public void UpdateHandView(IReadOnlyList<EmotionCardData> handData)
     {
         if (handArea == null) return;
-        
+
         // データの重複を許容するリスト（現在の手札の状態）
         List<EmotionCardData> remainingNewData = new List<EmotionCardData>(handData);
         List<BattleEmotionCard> nextActiveUIs = new List<BattleEmotionCard>();
@@ -407,7 +407,7 @@ public class BattleUIManager : MonoBehaviour
     {
         _isInUltimateSelection = true;
         UIEffectSpawner.Instance?.Play();
-        
+
         if (promptText != null)
         {
             promptText.text = "必殺技を発動する味方を選択してください";
@@ -449,9 +449,9 @@ public class BattleUIManager : MonoBehaviour
     private void OnUltimateUnitSelected(BattleUnit unit)
     {
         if (!_isInUltimateSelection) return;
-        
+
         PlayTargetSelectSE();
-        
+
         if (promptText != null) promptText.text = "必殺技の対象を選択してください";
 
         // 選択された味方を保持
@@ -554,7 +554,7 @@ public class BattleUIManager : MonoBehaviour
     {
         _isInUltimateSelection = false;
         ForceHideDescription();
-        
+
         if (promptText != null) promptText.gameObject.SetActive(false);
 
         // すべてのリスナーと選択状態を解除
@@ -567,10 +567,10 @@ public class BattleUIManager : MonoBehaviour
 
         // 予約（キュー追加）
         _turnManager.EnqueueUltimate(_tempUltimateActor, targets);
-        
+
         _tempUltimateActor = null;
         _tempUltimateSkill = null;
-        
+
         // ウルト選択が終わったら一旦UIロック（次のターン開始時に解除される）
         SetInteraction(false);
     }
@@ -578,7 +578,7 @@ public class BattleUIManager : MonoBehaviour
     public void CancelUltimateSelection()
     {
         _isInUltimateSelection = false;
-        
+
         if (promptText != null) promptText.gameObject.SetActive(false);
 
         foreach (var u in _turnManager.UnitManager.AllUnits)
@@ -590,7 +590,7 @@ public class BattleUIManager : MonoBehaviour
 
         _tempUltimateActor = null;
         _tempUltimateSkill = null;
-        
+
         // 演出のリセット：通常の行動キャラ強調に戻す
         var actor = _turnManager.ActiveUnit;
         if (actor != null)
@@ -657,21 +657,21 @@ public class BattleUIManager : MonoBehaviour
 
         battleStartText.text = text;
         RectTransform rect = battleStartText.rectTransform;
-        
+
         // 初期状態
         battleStartGroup.alpha = 0f;
         rect.anchoredPosition = new Vector2(-1200f, 0f);
-        
+
         // スライドイン
         battleStartGroup.DOFade(1f, 0.2f);
         yield return rect.DOAnchorPos(Vector2.zero, 0.6f).SetEase(Ease.OutBack).WaitForCompletion();
-        
+
         yield return new WaitForSeconds(waitDuration);
-        
+
         // スライドアウト
         battleStartGroup.DOFade(0f, 0.3f);
         yield return rect.DOAnchorPos(new Vector2(1200f, 0f), 0.5f).SetEase(Ease.InBack).WaitForCompletion();
-        
+
         rect.anchoredPosition = Vector2.zero;
     }
 

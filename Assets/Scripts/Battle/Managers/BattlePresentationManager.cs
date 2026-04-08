@@ -13,8 +13,7 @@ public class BattlePresentationManager : MonoBehaviour
     [SerializeField] private BattleUIManager _uiManager;
     [SerializeField] private UnitManager _unitManager;
 
-    // --- 透明度管理の状態保持 ---
-    private BattleUnit _ambientFocusActor; // 現在のターン担当者（常に強調されるべきベース）
+    private BattleUnit _ambientFocusActor;
     private BattleUnit _currentFocusActor;
     private List<BattleUnit> _currentFocusGroup;
     private float _currentDimAlpha = 1.0f;
@@ -28,8 +27,8 @@ public class BattlePresentationManager : MonoBehaviour
 
     private void Awake()
     {
-        if (_uiManager == null) _uiManager = FindFirstObjectByType<BattleUIManager>();
-        if (_unitManager == null) _unitManager = FindFirstObjectByType<UnitManager>();
+        if (_uiManager == null) _uiManager = FindAnyObjectByType<BattleUIManager>();
+        if (_unitManager == null) _unitManager = FindAnyObjectByType<UnitManager>();
     }
 
 
@@ -37,10 +36,9 @@ public class BattlePresentationManager : MonoBehaviour
     {
         if (Camera.main == null) yield break;
 
-        // --- 勝敗決定後のクリーンアップ：全員不透明、UI非表示 ---
         _ambientFocusActor = null;
         ResetAllTransparency();
-        
+
         if (_unitManager != null)
         {
             foreach (var unit in _unitManager.AllUnits)
@@ -48,39 +46,33 @@ public class BattlePresentationManager : MonoBehaviour
                 if (unit == null) continue;
                 unit.SetTurnActive(false);
                 unit.SetSelectable(false);
-                unit.SetAlpha(1.0f); // 死亡キャラも含め完全に不透明にする
+                unit.SetAlpha(1.0f);
             }
         }
 
         if (_uiManager != null)
         {
-            _uiManager.SetUIVisibility(false); // UI（コマンド等）を隠す
+            _uiManager.SetUIVisibility(false);
         }
 
-        // カメラズーム（勝った陣営の方へ）
         Vector3 targetPos = isVictory ? _allyVictoryCameraOffset : _enemyVictoryCameraOffset;
         var moveTween = Camera.main.transform.DOMove(targetPos, _cameraZoomDuration).SetEase(Ease.OutCubic);
-        // ついでにFOVも少し絞る（より印象的に）
         Camera.main.DOFieldOfView(40f, _cameraZoomDuration).SetEase(Ease.OutCubic);
 
-        // カメラワークが終了するのを待つ
         yield return moveTween.WaitForCompletion();
 
-        // 勝敗に応じたSEを再生
         AudioClip endSE = isVictory ? _victorySE : _defeatSE;
         if (endSE != null && SoundManager.Instance != null)
         {
             SoundManager.Instance.PlaySE(endSE);
         }
 
-        // 文字スプラッシュ
         string splashText = isVictory ? "VICTORY" : "DEFEAT";
         if (_uiManager != null)
         {
             yield return StartCoroutine(_uiManager.PlayBattleEndSplash(splashText));
         }
 
-        // ここでリザルト画面への遷移などのコールバックを待つ形にするのが一般的
     }
 
     /// <summary>
@@ -90,9 +82,9 @@ public class BattlePresentationManager : MonoBehaviour
     {
         if (_uiManager != null)
         {
-            _uiManager.SetUIVisibility(false); // UIを一旦隠す
+            _uiManager.SetUIVisibility(false);
             yield return StartCoroutine(_uiManager.PlayBattleStartSplash("BATTLE START"));
-            _uiManager.SetUIVisibility(true);  // UIを出す
+            _uiManager.SetUIVisibility(true);
         }
         else
         {
@@ -108,9 +100,8 @@ public class BattlePresentationManager : MonoBehaviour
         float antDuration = 0.2f;
         float recoveryDelay = 0.6f;
 
-        // --- フォーカス開始 ---
         SetOtherUnitsTransparency(attacker, targets, 0.3f);
-        
+
         if (playKnockback) attacker.PlayStepAction();
         else attacker.PlayJumpAction();
 
@@ -146,10 +137,10 @@ public class BattlePresentationManager : MonoBehaviour
             }
             yield return StartCoroutine(HitStopRoutine(0.1f));
         }
-        
+
         yield return new WaitForSeconds(recoveryDelay);
 
-        // --- 演出終了：リセット ---
+
         ResetAllTransparency();
     }
 
@@ -159,12 +150,11 @@ public class BattlePresentationManager : MonoBehaviour
         var effect = Instantiate(prefab, position, Quaternion.identity);
         effect.transform.localScale = Vector3.one * scale;
 
-        // レイヤーを最前面の "Effect" に設定
         var sr = effect.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
             sr.sortingLayerName = "Effect";
-            sr.sortingOrder = 100; //念のためオーダーも高くする
+            sr.sortingOrder = 100;
         }
 
         Destroy(effect, 3.0f);
@@ -184,7 +174,7 @@ public class BattlePresentationManager : MonoBehaviour
     public IEnumerator HitStopRoutine(float duration)
     {
         float originalTimeScale = Time.timeScale;
-        Time.timeScale = 0.05f; 
+        Time.timeScale = 0.05f;
         yield return new WaitForSecondsRealtime(duration);
         Time.timeScale = originalTimeScale;
     }
@@ -206,7 +196,7 @@ public class BattlePresentationManager : MonoBehaviour
         _currentFocusActor = attacker;
         _currentFocusGroup = targets;
         _currentDimAlpha = alpha;
-        
+
         RefreshTransparency();
     }
 
@@ -230,31 +220,24 @@ public class BattlePresentationManager : MonoBehaviour
             if (unit == null || unit.IsFadingOut || unit.Data == null) continue;
 
             float targetAlpha = 1.0f;
-            
-            // 決定優先順位：
-            // 1. 現在の演出フォーカス（_currentFocusActor/Group）
-            // 2. なければターン担当（_ambientFocusActor）
-            
+
             bool isCore = false;
             float dim = 1.0f;
 
             if (_currentFocusActor != null || (_currentFocusGroup != null && _currentFocusGroup.Count > 0))
             {
-                // 演出中
                 isCore = (unit == _currentFocusActor) || (_currentFocusGroup != null && _currentFocusGroup.Contains(unit));
                 dim = _currentDimAlpha;
             }
             else if (_ambientFocusActor != null)
             {
-                // 通常時（ターン担当強調）
                 isCore = (unit == _ambientFocusActor);
-                dim = 0.3f; // ターン中デフォルトの暗さ
+                dim = 0.3f;
             }
 
             if (!isCore)
             {
                 targetAlpha = dim;
-                // 死亡ユニットはさらに薄く
                 if (unit.Data.currentHp <= 0) targetAlpha *= 0.5f;
             }
 

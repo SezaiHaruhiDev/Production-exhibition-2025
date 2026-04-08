@@ -24,8 +24,8 @@ public class TurnOrderUI : MonoBehaviour
 
     private void Awake()
     {
-        if (turnOrderManager == null) turnOrderManager = FindFirstObjectByType<TurnOrderManager>();
-        if (turnManager == null) turnManager = FindFirstObjectByType<TurnManager>();
+        if (turnOrderManager == null) turnOrderManager = FindAnyObjectByType<TurnOrderManager>();
+        if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
         
         // レイアウトを強制的に左合わせにする設定
         RectTransform rt = container as RectTransform;

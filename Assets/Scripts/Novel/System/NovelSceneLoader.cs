@@ -29,7 +29,7 @@ namespace Novel.System
         private void Start()
         {
             // シーン内のNovelEngineを探しておく
-            _engine = Object.FindFirstObjectByType<NovelEngine>();
+            _engine = Object.FindAnyObjectByType<NovelEngine>();
         }
 
         /// <summary>

@@ -12,8 +12,8 @@ public class TurnOrderManager : MonoBehaviour
 
     private void Awake()
     {
-        if (turnManager == null) turnManager = FindFirstObjectByType<TurnManager>();
-        if (unitManager == null) unitManager = FindFirstObjectByType<UnitManager>();
+        if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
+        if (unitManager == null) unitManager = FindAnyObjectByType<UnitManager>();
     }
 
     /// <summary>
