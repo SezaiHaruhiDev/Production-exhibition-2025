@@ -38,7 +38,7 @@ namespace Novel.System
             foreach (var cmd in commands)
             {
                 ProcessCommand(cmd);
-                
+
                 // コマンド実行によってウェイトや映像再生（IsDelaying = true）が発生した場合、それが終わるまで待機
                 while (_manager.IsDelaying)
                 {
@@ -274,7 +274,7 @@ namespace Novel.System
 
         private void CheckFlags(Command cmd)
         {
-            if (cmd.parameters.TryGetValue("ids", out string idsStr) && 
+            if (cmd.parameters.TryGetValue("ids", out string idsStr) &&
                 cmd.parameters.TryGetValue("label", out string nextLabel))
             {
                 string[] ids = idsStr.Split('^');

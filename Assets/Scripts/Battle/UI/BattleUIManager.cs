@@ -647,7 +647,6 @@ public class BattleUIManager : MonoBehaviour
     /// </summary>
     public IEnumerator PlayBattleEndSplash(string text)
     {
-        // 終了時は長時間出しておきたいため、待ち時間を長めにする
         yield return StartCoroutine(PlayGenericSplash(text, 5.0f));
     }
 

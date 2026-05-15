@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// ドラッグ可能な感情カードUI（DCG風のアニメーション対応）
+/// ドラッグ可能な感情カード
 /// </summary>
 public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
@@ -22,7 +22,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
 
     public EmotionCardData Data { get; private set; }
     public bool IsConsumed => _isConsumed;
-    
+
     private Canvas _canvas;
     private GraphicRaycaster _raycaster;
     private Vector3 _layoutPosition;
@@ -73,7 +73,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
     }
 
     /// <summary>
-    /// ドローアニメーション（山札→中央で見せつけ→手札）の開始
+    /// ドローアニメーションの開始
     /// </summary>
     public void PlayDrawAnimation(Vector3 startWorldPos, Vector3 centerWorldPos)
     {
@@ -83,16 +83,16 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
     private System.Collections.IEnumerator DrawAnimationCoroutine(Vector3 startWorldPos, Vector3 centerWorldPos)
     {
         _isAnimating = true;
-        
+
         // 開始位置（山札）
         transform.position = startWorldPos;
         transform.localScale = Vector3.zero;
         transform.localRotation = Quaternion.identity;
 
-        // 1. 画面中央へ移動しつつ拡大
+        // 面中央へ移動しつつ拡大
         float duration = 0.5f;
         float elapsed = 0f;
-        
+
         if (_canvas != null) _canvas.sortingOrder = 999; // 最前面
 
         // ドロー音再生
@@ -106,8 +106,8 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
             // イージング（少し勢いよく出る）
-            float curve = 1f - Mathf.Pow(1f - t, 3); 
-            
+            float curve = 1f - Mathf.Pow(1f - t, 3);
+
             transform.position = Vector3.Lerp(transform.position, centerWorldPos, curve);
             transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one * 2.5f, curve);
             yield return null;
@@ -116,7 +116,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
         // 2. 見せつけ休止
         yield return new WaitForSeconds(0.8f);
 
-        // 3. アニメーション終了（あとはUpdateでの補間に任せる）
+        // 3. アニメーション終了
         _isAnimating = false;
     }
 
@@ -157,7 +157,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
         transform.localPosition = Vector3.Lerp(transform.localPosition, targetPos, Time.deltaTime * smoothSpeed);
         transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRot, Time.deltaTime * smoothSpeed);
         transform.localScale = Vector3.Lerp(transform.localScale, targetScale, Time.deltaTime * smoothSpeed);
-        
+
         if (_canvas != null)
         {
             _canvas.sortingOrder = targetSortOrder;
@@ -233,7 +233,7 @@ public class BattleEmotionCard : MonoBehaviour, IBeginDragHandler, IDragHandler,
                 if (success)
                 {
                     // 成功したら物理的に削除
-                    droppedCardUI.OnConsumedBySlot(); 
+                    droppedCardUI.OnConsumedBySlot();
                     this.OnConsumedBySlot();
                 }
                 else

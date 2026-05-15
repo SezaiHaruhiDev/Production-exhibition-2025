@@ -32,17 +32,17 @@ public class DamageTextUI : MonoBehaviour
     public void Setup(int amount, Color color)
     {
         if (textMesh == null) textMesh = GetComponentInChildren<TextMeshProUGUI>();
-        
+
         textMesh.text = amount.ToString();
         textMesh.color = color;
 
         // 演出開始
         Sequence sequence = DOTween.Sequence();
-        
+
         // 1. 少し上に跳ね上がりながら上に移動
         transform.localPosition += Vector3.down * 0.5f; // 少し下から開始
         sequence.Join(transform.DOLocalMoveY(transform.localPosition.y + moveDistance, duration).SetEase(Ease.OutQuart));
-        
+
         // 2. フェードアウト
         sequence.Join(textMesh.DOFade(0, duration).SetEase(Ease.InExpo));
 

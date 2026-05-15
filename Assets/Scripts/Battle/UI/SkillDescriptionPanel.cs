@@ -25,7 +25,7 @@ public class SkillDescriptionPanel : MonoBehaviour
         // スキル名とコスト（あれば）を太字などで際立たせる
         string costText = skill.imaginationCost > 0 ? $" (MP:{skill.imaginationCost})" : "";
         string header = $"<b>【{skill.displayName}{costText}】</b>\n";
-        
+
         string displayBody = skill.description;
 
         // カードがある場合、特殊な説明文に差し替える
@@ -65,7 +65,7 @@ public class SkillDescriptionPanel : MonoBehaviour
 
         // カード単体の説明
         descriptionText.text = $"<b>【{card.emotionName}】</b>\nレベル {card.level} の感情カード。";
-        
+
         gameObject.SetActive(true);
         if (canvasGroup != null) canvasGroup.alpha = 1f;
     }

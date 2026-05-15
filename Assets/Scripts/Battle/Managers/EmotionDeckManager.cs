@@ -95,7 +95,7 @@ public class EmotionDeckManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 指定されたカードを手札に加える（スカスカからの返却など）
+    /// 指定されたカードを手札に加える
     /// </summary>
     public void AddCard(EmotionCardData card)
     {
@@ -126,21 +126,19 @@ public class EmotionDeckManager : MonoBehaviour
                 if (!_hand.Contains(cardA) || !_hand.Contains(cardB)) return false;
             }
 
-            // 削除実行（念のため削除成功も確認する）
+            // 削除実行
             bool removedA = _hand.Remove(cardA);
             bool removedB = _hand.Remove(cardB);
 
             if (!removedA || !removedB)
             {
-                // 削除に失敗した場合は状態不整合なので中断（ここに来ることはないはずだが安全策）
-                // 元に戻す処理などは簡易的には省略するが、Containsチェックで防げているはず
                 if (removedA) _hand.Add(cardA);
                 if (removedB) _hand.Add(cardB);
                 return false;
             }
 
             _hand.Add(cardA.nextLevelCard);
-            
+
             NotifyHandChanged();
             return true;
         }
@@ -159,7 +157,7 @@ public class EmotionDeckManager : MonoBehaviour
         {
             _hand.Remove(card);
         }
-        
+
         DiscardCard(card, true);
     }
 

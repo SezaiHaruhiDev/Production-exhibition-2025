@@ -18,22 +18,22 @@ public static class SkillExecutor
         // 演出マネージャーがあれば演出を再生し、そのコールバックで効果を適用する
         if (presentation != null)
         {
-             // 攻撃以外（回復・蘇生）ならノックバックさせない
-             bool playKnockback = skill.IsAttackSkill(emotion);
+            // 攻撃以外（回復・蘇生）ならノックバックさせない
+            bool playKnockback = skill.IsAttackSkill(emotion);
 
-             // 演出対象をフィルタリング：基本は生存者のみ（蘇生スキルの場合は死亡者も含める）
-             var presentationTargets = targets.FindAll(t => t != null && (t.Data.currentHp > 0 || skill.category == SkillCategory.Revive));
+            // 演出対象をフィルタリング：基本は生存者のみ（蘇生スキルの場合は死亡者も含める）
+            var presentationTargets = targets.FindAll(t => t != null && (t.Data.currentHp > 0 || skill.category == SkillCategory.Revive));
 
-             yield return presentation.StartCoroutine(presentation.PlayAttackSequence(
-                 actor, 
-                 presentationTargets, 
-                 skill.effectPrefab, 
-                 skill.hitImpactDelay, 
-                 skill.effectYOffset,
-                 playKnockback,
-                 skill.hitSE,
-                 () => { ApplyEffects(actor, targets, skill, emotion); }
-             ));
+            yield return presentation.StartCoroutine(presentation.PlayAttackSequence(
+                actor,
+                presentationTargets,
+                skill.effectPrefab,
+                skill.hitImpactDelay,
+                skill.effectYOffset,
+                playKnockback,
+                skill.hitSE,
+                () => { ApplyEffects(actor, targets, skill, emotion); }
+            ));
         }
         else
         {
@@ -44,7 +44,7 @@ public static class SkillExecutor
     }
 
     /// <summary>
-    /// 旧互換用（同期実行） - 必要なら残すが、基本はAsync推奨
+    /// 旧互換用（同期実行）
     /// </summary>
     public static void Execute(BattleUnit actor, List<BattleUnit> targets, SkillData skill, EmotionCardData emotion)
     {
@@ -84,7 +84,7 @@ public static class SkillExecutor
         }
         else
         {
-             ApplyDamage(actor, targets, skill.basePower);
+            ApplyDamage(actor, targets, skill.basePower);
         }
     }
 
@@ -116,10 +116,10 @@ public static class SkillExecutor
             // ダメージ計算: (攻撃者のATK + スキルの威力) - 対象のDEF
             // 最低ダメージは1とする
             int damage = Mathf.Max(1, (actor.Data.atk + power) - target.Data.def);
-            
-            target.Data.currentHp = Mathf.Max(0, target.Data.currentHp - damage); 
-            target.RefreshHPBar(); 
-            target.ShowDamage(damage); 
+
+            target.Data.currentHp = Mathf.Max(0, target.Data.currentHp - damage);
+            target.RefreshHPBar();
+            target.ShowDamage(damage);
         }
     }
 
@@ -127,7 +127,7 @@ public static class SkillExecutor
     {
         foreach (var target in targets)
         {
-            if (target == null || target.Data.currentHp <= 0) continue; 
+            if (target == null || target.Data.currentHp <= 0) continue;
 
             // 回復計算: 攻撃者のATK + スキルの威力
             int heal = actor.Data.atk + power;
@@ -145,7 +145,7 @@ public static class SkillExecutor
 
             int heal = power;
             target.Data.currentHp = Mathf.Min(target.Data.maxHp, heal);
-            
+
             target.SetDown(false);
             target.RefreshHPBar();
             target.ShowHeal(heal);

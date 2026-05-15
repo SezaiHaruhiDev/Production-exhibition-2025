@@ -16,10 +16,10 @@ namespace Novel.System
         [Header("Transition Settings")]
         [Tooltip("次に読み込むシナリオファイル名（拡張子不要）")]
         [SerializeField] private string targetScenarioName = "scenario";
-        
+
         [Tooltip("フェードアウトにかける秒数")]
         [SerializeField] private float fadeDuration = 1.0f;
-        
+
         [Tooltip("画面全体を覆うCanvasGroup（黒画像などを想定）")]
         [SerializeField] private CanvasGroup fadeCanvasGroup;
 

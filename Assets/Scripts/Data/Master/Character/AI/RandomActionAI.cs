@@ -24,7 +24,7 @@ public class RandomActionAI : EnemyLogicSO
         }
 
         int selectedSkillId = skillIds[Random.Range(0, skillIds.Count)];
-        
+
         // TurnManagerからSkillDataを取得
         SkillData skill = turnManager.GetSkillData(selectedSkillId);
         if (skill == null)
@@ -71,7 +71,7 @@ public class RandomActionAI : EnemyLogicSO
 
         // 実行
         Debug.Log($"Enemy Action: {skill.displayName} on {string.Join(",", targets.Select(t => t.Data.name))}");
-        
+
         // 非同期（演出込み）で実行
         yield return turnManager.StartCoroutine(SkillExecutor.ExecuteAsync(actor, targets, skill, null, turnManager.PresentationManager));
     }

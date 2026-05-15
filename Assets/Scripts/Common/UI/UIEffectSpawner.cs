@@ -74,9 +74,9 @@ public class UIEffectSpawner : MonoBehaviour
             debris.gameObject.SetActive(true);
             debris.sprite = sprite;
             debris.rectTransform.anchoredPosition = position;
-            
+
             // サイズを少しランダムに（元の画像サイズに依存するので調整）
-            debris.SetNativeSize(); 
+            debris.SetNativeSize();
 
             // ランダム要素
             float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;

@@ -31,7 +31,7 @@ public class BattleSkillButton : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public void Configure(SkillData skill)
     {
         _currentSkill = skill;
-        
+
         // アイコンの設定
         if (skillIconImage != null)
         {
@@ -42,14 +42,14 @@ public class BattleSkillButton : MonoBehaviour, IPointerEnterHandler, IPointerEx
             }
             else
             {
-                // アイコンがない場合はボタン自体を非表示にする（テキスト廃止のため）
+                // アイコンがない場合はボタン自体を非表示にする
                 skillIconImage.gameObject.SetActive(false);
                 Debug.LogWarning($"Skill '{skill.displayName}' has no icon assigned!");
             }
         }
 
         gameObject.SetActive(true);
-        
+
         int currentMP = _turnManager?.BattleCurrentMP ?? 0;
         UpdateUsability(currentMP);
     }
@@ -68,7 +68,7 @@ public class BattleSkillButton : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public void UpdateUsability(int currentMP)
     {
         if (_currentSkill == null || _manager == null) return;
-        
+
         bool hasEnoughMP = currentMP >= _currentSkill.imaginationCost;
         bool isReviveEligible = true;
 
@@ -83,7 +83,7 @@ public class BattleSkillButton : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
         // 見た目のフィードバック
         Color feedbackColor = canUse ? Color.white : new Color(1, 1, 1, 0.5f);
-        
+
         if (skillIconImage != null)
         {
             skillIconImage.color = feedbackColor;

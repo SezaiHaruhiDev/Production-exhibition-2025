@@ -18,13 +18,13 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
     [SerializeField] private Vector3 _targetMarkOffset = new Vector3(0, 1f, -2.0f);
     [SerializeField] private GameObject _turnIndicator;
     [SerializeField] private Vector3 _turnIndicatorOffset = new Vector3(0, 2f, -1.0f);
-    
+
     [Header("Shadow Settings")]
     [SerializeField] private SpriteRenderer _blobShadow;
     [SerializeField] private float _shadowScale = 1.0f;
     [SerializeField] private float _shadowYOffset = 0.02f;
     [SerializeField] private Color _shadowColor = new Color(0, 0, 0, 0.5f);
-    
+
     private Sprite _originalSprite;
 
     public UnitCharacter Data { get; private set; }
@@ -36,7 +36,7 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
     public void Setup(UnitCharacter data, Sprite sprite)
     {
         this.Data = data;
-        
+
         if (_spriteRenderer == null) _spriteRenderer = transform.Find("Visual")?.GetComponent<SpriteRenderer>() ?? GetComponentInChildren<SpriteRenderer>();
         if (_shadowCaster == null) _shadowCaster = transform.Find("ShadowCaster")?.GetComponent<SpriteRenderer>();
         if (_blobShadow == null) _blobShadow = transform.Find("BlobShadow")?.GetComponent<SpriteRenderer>();
@@ -93,10 +93,10 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
     private void AdjustToGround(SpriteRenderer sr)
     {
         sr.transform.localPosition = Vector3.zero;
-        
+
         float currentBottomY = sr.bounds.min.y;
         float baseOriginY = transform.position.y;
-        
+
         // 差分だけ持ち上げる（または下げる）
         float offsetY = baseOriginY - currentBottomY;
         sr.transform.localPosition = new Vector3(0, offsetY, 0);
@@ -105,16 +105,14 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
         Physics2D.SyncTransforms();
 
         // コライダーのサイズと位置を「画像本体のローカル空間」で合わせる
-        // これにより、親の回転や自身のスケールに正確に追従するようになります。
         if (_collider is BoxCollider box && sr.sprite != null)
         {
-            // sr.sprite.bounds はスプライト自体のローカルサイズ（PPU考慮済み）を返します
             box.size = new Vector3(sr.sprite.bounds.size.x, sr.sprite.bounds.size.y, 0.5f);
             box.center = new Vector3(sr.sprite.bounds.center.x, sr.sprite.bounds.center.y, 0);
         }
     }
 
-   
+
     /// <summary>
     /// ダメージを表示し、死亡判定を行う
     /// </summary>
@@ -126,7 +124,7 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
         {
             var manager = GetComponentInParent<UnitManager>();
             if (manager == null) manager = FindAnyObjectByType<UnitManager>();
-            
+
             manager?.OnUnitDead(this);
         }
     }
@@ -146,11 +144,11 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
         // 指定されたオフセット位置に出現させる
         Vector3 spawnPos = transform.position + _damageTextOffset;
         GameObject go = Instantiate(_damageTextPrefab, spawnPos, Quaternion.identity);
-        
+
         var damageUI = go.GetComponent<DamageTextUI>();
         if (damageUI != null)
         {
-            damageUI.Setup(amount, color); 
+            damageUI.Setup(amount, color);
         }
     }
 
@@ -241,7 +239,7 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
     public void SetSelectable(bool selectable)
     {
         _isSelectable = selectable;
-        
+
         if (_targetMark != null)
         {
             if (selectable)
@@ -281,9 +279,9 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
         {
             Vector3 targetRotation = Camera.main.transform.eulerAngles;
             Quaternion rot = Quaternion.Euler(0, targetRotation.y, 0);
-            
+
             _spriteRenderer.transform.rotation = rot;
-            
+
             // 影落とし用も同じ方向を向かせる（影の形を合わせるため）
             if (_shadowCaster != null)
             {
@@ -348,11 +346,11 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
         float duration = 0.1f;
 
         Sequence seq = DOTween.Sequence();
-        
+
         // 1. 下がる & 傾く
         seq.Append(_spriteRenderer.transform.DOLocalMoveX(moveDist, duration).SetRelative());
         seq.Join(_spriteRenderer.transform.DOLocalRotate(new Vector3(0, 0, rotAngle), duration).SetRelative());
-        
+
         // 2. 素早く戻る
         seq.Append(_spriteRenderer.transform.DOLocalMoveX(0, duration * 2f));
         seq.Join(_spriteRenderer.transform.DOLocalRotate(Vector3.zero, duration * 2f));
@@ -363,7 +361,7 @@ public class BattleUnit : MonoBehaviour, IPointerDownHandler
     /// </summary>
     public void PlayStepAction(float duration = 0.15f)
     {
-        float direction = Data.isAlly ? 1f : -1f; 
+        float direction = Data.isAlly ? 1f : -1f;
         float moveDist = 0.8f * direction; // より深く踏み込む
 
         Sequence seq = DOTween.Sequence();

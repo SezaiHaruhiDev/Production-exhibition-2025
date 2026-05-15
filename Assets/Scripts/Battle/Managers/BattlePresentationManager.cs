@@ -5,7 +5,7 @@ using System.Linq;
 using DG.Tweening;
 
 /// <summary>
-/// 戦闘中の演出を管理するクラス（カメラ系を更地に戻した状態）
+/// 戦闘中の演出を管理するクラス
 /// </summary>
 public class BattlePresentationManager : MonoBehaviour
 {
@@ -93,7 +93,7 @@ public class BattlePresentationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 攻撃演出（連番エフェクト、ノックバック、SE、タイミング調整込み）
+    /// 攻撃演出
     /// </summary>
     public IEnumerator PlayAttackSequence(BattleUnit attacker, List<BattleUnit> targets, GameObject effectPrefab, float hitDelay, float yOffset, bool playKnockback, AudioClip hitSE, System.Action onImpact)
     {
@@ -180,7 +180,7 @@ public class BattlePresentationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 現在のターン担当者を設定する（演出リセット後の戻り先になる）
+    /// 現在のターン担当者を設定する
     /// </summary>
     public void SetAmbientFocus(BattleUnit unit)
     {

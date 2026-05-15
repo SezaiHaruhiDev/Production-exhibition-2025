@@ -61,7 +61,7 @@ public class UIManager : MonoBehaviour
         {
             if (menuButton != null) menuButton.SetActive(menuValue == 1);
         }
-        
+
         // レトロノイズ（フィルムノイズ）の表示切り替え
         if (cmd.parameters.TryGetValue("filmnoise", out string filmstring) && int.TryParse(filmstring, out int filmValue))
         {
@@ -77,7 +77,7 @@ public class UIManager : MonoBehaviour
         foreach (var item in titleUIItems)
         {
             if (item == null) continue;
-            
+
             CanvasGroup cg = GetOrAddCanvasGroup(item);
             cg.DOFade(0f, fadeDuration).OnComplete(() => item.SetActive(false));
         }
@@ -91,7 +91,7 @@ public class UIManager : MonoBehaviour
         foreach (var item in titleUIItems)
         {
             if (item == null) continue;
-            
+
             item.SetActive(true);
             CanvasGroup cg = GetOrAddCanvasGroup(item);
             cg.alpha = 0f;

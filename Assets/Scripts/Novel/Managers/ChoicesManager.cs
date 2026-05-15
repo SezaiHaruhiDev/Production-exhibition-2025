@@ -38,7 +38,7 @@ public class ChoicesManager : MonoBehaviour
         _isChoiceActive = true;
 
         List<Button> buttons = new List<Button>();
-        
+
         foreach (var kv in cmd.parameters)
         {
             // "表示名^移動先ラベル" の形式
@@ -58,7 +58,7 @@ public class ChoicesManager : MonoBehaviour
             GameObject go = Instantiate(choiceButtonPrefab, parent);
             Button btn = go.GetComponent<Button>();
             TextMeshProUGUI tmp = go.GetComponentInChildren<TextMeshProUGUI>();
-            
+
             if (tmp != null) tmp.text = buttonText;
 
             btn.interactable = false;

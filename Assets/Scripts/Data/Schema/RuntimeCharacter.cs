@@ -64,7 +64,7 @@ public class RuntimeCharacter
         id = rental.baseAlly.id;
         name = string.IsNullOrEmpty(rental.name) ? rental.baseAlly.characterName : rental.name;
         level = rental.level;
-        
+
         // ステータスが0でない場合はレンタル側の値を、0の場合はマスター側の値を使用する
         maxHp = rental.maxHp > 0 ? rental.maxHp : rental.baseAlly.hp;
         maxMp = rental.maxMp > 0 ? rental.maxMp : rental.baseAlly.mp;
@@ -72,7 +72,7 @@ public class RuntimeCharacter
         // 指定された割合(0.0〜1.0)に基づいて現在値を計算
         currentHp = Mathf.RoundToInt(maxHp * rental.hpRatio);
         currentMp = Mathf.RoundToInt(maxMp * rental.mpRatio);
-        
+
         atk = rental.atk > 0 ? rental.atk : rental.baseAlly.atk;
         def = rental.def > 0 ? rental.def : rental.baseAlly.def;
         speed = rental.speed > 0 ? rental.speed : rental.baseAlly.speed;

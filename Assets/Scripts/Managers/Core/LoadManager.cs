@@ -9,7 +9,7 @@ using UnityEngine.Assertions;
 /// </summary>
 public class LoadManager : MonoBehaviour
 {
-    public int nextBattleId; 
+    public int nextBattleId;
     public static LoadManager Instance { get; private set; }
     private bool _initialized = false;
 
@@ -160,9 +160,9 @@ public class LoadManager : MonoBehaviour
         {
             int oldLevel = data.level;
             data.level = correctLevel;
-            
+
             var gains = table.GetStatGain(data.level);
-            
+
             data.maxHp = master.hp + gains.hp;
             data.maxMp = master.mp + gains.mp;
             data.atk = master.atk + gains.atk;

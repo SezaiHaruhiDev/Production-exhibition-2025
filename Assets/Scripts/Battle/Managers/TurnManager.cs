@@ -241,7 +241,7 @@ public class TurnManager : MonoBehaviour
                 actionCharacter.Data.currentActionGauge -= ACTION_GAUGE_GOAL;
             }
 
-            yield return null; // Safety yield to prevent infinite loop/freeze
+            yield return null;
         }
     }
 
@@ -434,7 +434,6 @@ public class TurnManager : MonoBehaviour
         {
             state = BattleState.EnemyTurn;
 
-            // 敵ターン時も行動キャラを強調
             if (presentationManager != null) presentationManager.SetOtherUnitsTransparency(unit, null, 0.3f);
 
             var master = registry.GetById(unit.Data.characterId) as EnemyMasterSO;
@@ -445,7 +444,7 @@ public class TurnManager : MonoBehaviour
             else
             {
                 Debug.LogWarning($"Enemy {unit.Data.name} has no AI Logic assigned or Master not found!");
-                yield return null; // Safety yield
+                yield return null;
             }
         }
 

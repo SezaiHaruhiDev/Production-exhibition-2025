@@ -44,7 +44,7 @@ public class HandLayoutGroup : MonoBehaviour
 
         // カード間の間隔計算
         // 常に少し重なるように（cardWidth * 0.8f など）基本の間隔を設定
-        float baseSpacing = cardWidth * 0.7f; 
+        float baseSpacing = cardWidth * 0.7f;
         float totalNeededWidth = (count - 1) * baseSpacing;
         float actualSpacing = baseSpacing;
 
@@ -66,7 +66,7 @@ public class HandLayoutGroup : MonoBehaviour
             float x = startX + i * actualSpacing;
 
             // Y位置 (放物線を描く)
-            float yOffset = -4f * Mathf.Pow(t - 0.5f, 2) + 1f; 
+            float yOffset = -4f * Mathf.Pow(t - 0.5f, 2) + 1f;
             float y = yOffset * arcAmount;
 
             // 回転 (扇状に広げる)

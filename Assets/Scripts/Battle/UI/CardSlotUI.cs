@@ -46,7 +46,7 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
             }
 
             SetCard(cardData);
-            
+
             if (cardSetSE != null && SoundManager.Instance != null)
             {
                 SoundManager.Instance.PlaySE(cardSetSE);
@@ -79,7 +79,7 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
     {
         CurrentCard = card;
         if (_visualRoot != null) _visualRoot.SetActive(true);
-        
+
         if (_iconImage != null && card != null)
         {
             _iconImage.sprite = card.cardSprite;
@@ -90,7 +90,7 @@ public class CardSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
     public void Clear()
     {
         CurrentCard = null;
-        
+
         if (_emptySlotSprite != null)
         {
             // 空スロット用の画像がある場合は、ルートを表示したまま画像だけ差し替える

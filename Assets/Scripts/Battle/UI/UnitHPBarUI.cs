@@ -52,7 +52,7 @@ public class UnitHPBarUI : MonoBehaviour
         RectTransform rt = GetComponent<RectTransform>();
         if (rt != null)
         {
-            rt.localPosition = positionOffset; 
+            rt.localPosition = positionOffset;
             rt.localScale = Vector3.one * 0.01f;
         }
 

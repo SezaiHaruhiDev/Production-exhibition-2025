@@ -13,11 +13,11 @@ public class TurnOrderUI : MonoBehaviour
     [SerializeField] private Transform container;
     [SerializeField] private int predictionCount = 10;
     [SerializeField] private float updateInterval = 0.1f; // 更新間隔（秒）
-    
+
     [SerializeField] private float itemSpacing = 120f;
     [SerializeField] private float startOffsetX = 50f; // 左端からのオフセット
     [SerializeField] private float animationDuration = 0.4f;
-    
+
     private List<TurnOrderUIItem> _items = new List<TurnOrderUIItem>();
     private List<BattleUnit> _lastOrder = new List<BattleUnit>();
     private float _lastUpdateTime;
@@ -26,7 +26,7 @@ public class TurnOrderUI : MonoBehaviour
     {
         if (turnOrderManager == null) turnOrderManager = FindAnyObjectByType<TurnOrderManager>();
         if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
-        
+
         // レイアウトを強制的に左合わせにする設定
         RectTransform rt = container as RectTransform;
         if (rt != null)
@@ -61,7 +61,7 @@ public class TurnOrderUI : MonoBehaviour
         if (turnOrderManager == null || container == null || turnOrderUIItemPrefab == null) return;
 
         List<BattleUnit> order = turnOrderManager.CalculateTurnOrder(predictionCount);
-        
+
         // 1. 行動者が変わった（先頭が入れ替わった）かチェック
         if (_lastOrder.Count > 0 && order.Count > 0 && _lastOrder[0] != order[0])
         {
@@ -93,7 +93,7 @@ public class TurnOrderUI : MonoBehaviour
             if (i < order.Count)
             {
                 _items[i].gameObject.SetActive(true);
-                
+
                 BattleUnit unit = order[i];
                 Sprite icon = GetIconForUnit(unit);
 
@@ -133,7 +133,7 @@ public class TurnOrderUI : MonoBehaviour
                 icon = master.characterMiniSprite ?? master.characterBattleSprite;
             }
         }
-        
+
         if (icon == null)
         {
             var sr = unit.GetComponentInChildren<SpriteRenderer>();

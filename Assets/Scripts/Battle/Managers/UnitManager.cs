@@ -23,7 +23,7 @@ public class UnitManager : MonoBehaviour
 
     #region Private Fields
     private Dictionary<int, BattleUnit> allbattleunits = new();
-    
+
     /// <summary>
     /// 生成された全てのユニットリスト
     /// </summary>
@@ -117,11 +117,11 @@ public class UnitManager : MonoBehaviour
         BattleUnit battleUnit = Instantiate(_battleunitPrefab, spawnPoint);
         battleUnit.transform.localPosition = Vector3.zero;
         battleUnit.transform.localRotation = Quaternion.identity;
-        
+
         battleUnit.name = data.name;
 
         Sprite sprite = master.characterBattleSprite != null ? master.characterBattleSprite : master.characterBigSprite;
-        
+
         battleUnit.Setup(data, sprite);
         allbattleunits.Add(data.unitId, battleUnit);
         if (isAlly) _currentAllyCount++; else _currentEnemyCount++;
@@ -138,7 +138,7 @@ public class UnitManager : MonoBehaviour
         {
             var master = registry.GetById(unit.Data.characterId) as AllyMasterSO;
             Sprite downSprite = (master != null) ? master.downSprite : null;
-            
+
             unit.SetDown(true, downSprite);
         }
         else

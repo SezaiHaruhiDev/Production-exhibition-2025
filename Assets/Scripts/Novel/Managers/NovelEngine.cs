@@ -100,7 +100,7 @@ public class NovelEngine : MonoBehaviour
         if (flagManager == null)
         {
             flagManager = GetComponentInChildren<FlagManager>();
-            if (flagManager == null) 
+            if (flagManager == null)
             {
                 flagManager = gameObject.AddComponent<FlagManager>();
             }
@@ -111,10 +111,10 @@ public class NovelEngine : MonoBehaviour
     {
         _parser = new ScenarioParser();
         _executor = new CommandExecutor(this);
-        
+
         // 外部から指定されたシナリオ名があればそれを使う
         textFile = "texts/" + ScenarioDataHolder.GetAndReset();
-        
+
         Init();
     }
 
@@ -140,7 +140,7 @@ public class NovelEngine : MonoBehaviour
         {
             _pageQueue = _parser.ParsePages(firstText);
         }
-        
+
         StartCoroutine(RunScenarioLoop());
     }
 
@@ -183,7 +183,7 @@ public class NovelEngine : MonoBehaviour
             if (nextIcon != null) nextIcon.SetActive(false);
 
             Page page = _pageQueue.Dequeue();
-            
+
             if (page.commands.Count > 0)
             {
                 yield return StartCoroutine(_executor.ExecuteCoroutine(page.commands));
@@ -227,7 +227,7 @@ public class NovelEngine : MonoBehaviour
         if (isDelaying) return;
 
         if (nextIcon != null) nextIcon.SetActive(false);
-        
+
         if (currentOutputText.maxVisibleCharacters < currentOutputText.text.Length)
         {
             if (_showCharsCoroutine != null)
@@ -315,7 +315,7 @@ public class NovelEngine : MonoBehaviour
 
     private IEnumerator TitleDelay()
     {
-        yield return new WaitForSeconds(2f); 
+        yield return new WaitForSeconds(2f);
         if (uiManager != null)
         {
             uiManager.FadeOutTitleUI();
@@ -384,7 +384,7 @@ public class NovelEngine : MonoBehaviour
         }
 
         videoPlayer.Play();
-        
+
         // 再生終了まで待機
         while (videoPlayer.isPlaying)
         {

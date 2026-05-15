@@ -39,7 +39,7 @@ public class SaveDataManager
             try
             {
                 string json = File.ReadAllText(_savePath);
-                _characterDict = JsonConvert.DeserializeObject<Dictionary<int, CharacterData>>(json) 
+                _characterDict = JsonConvert.DeserializeObject<Dictionary<int, CharacterData>>(json)
                                  ?? new Dictionary<int, CharacterData>();
             }
             catch (System.Exception e)

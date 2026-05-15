@@ -11,13 +11,13 @@ public class UIFlipbook : MonoBehaviour
 {
     [Tooltip("再生するスプライト連番")]
     [SerializeField] private Sprite[] frames;
-    
+
     [Tooltip("1秒あたりのフレーム数 (FPS)")]
     [SerializeField] private float fps = 30f;
-    
+
     [Tooltip("ループするかどうか")]
     [SerializeField] private bool loop = false;
-    
+
     [Tooltip("再生終了時に非表示にするか")]
     [SerializeField] private bool disableOnComplete = true;
 
@@ -49,9 +49,9 @@ public class UIFlipbook : MonoBehaviour
     public void Play()
     {
         if (frames == null || frames.Length == 0) return;
-        
+
         if (_currentCoroutine != null) StopCoroutine(_currentCoroutine);
-        
+
         gameObject.SetActive(true);
         _currentCoroutine = StartCoroutine(PlayRoutine());
     }
@@ -59,14 +59,14 @@ public class UIFlipbook : MonoBehaviour
     private IEnumerator PlayRoutine()
     {
         float waitTime = 1f / fps;
-        
+
         while (true)
         {
             for (int i = 0; i < frames.Length; i++)
             {
                 _targetImage.sprite = frames[i];
                 // NativeSizeに合わせたい場合はコメントアウト解除
-                // _targetImage.SetNativeSize(); 
+                // _targetImage.SetNativeSize();
                 yield return new WaitForSeconds(waitTime);
             }
 
@@ -78,7 +78,7 @@ public class UIFlipbook : MonoBehaviour
 
         if (disableOnComplete) gameObject.SetActive(false);
         if (destroyOnComplete) Destroy(gameObject);
-        
+
         _currentCoroutine = null;
     }
 }

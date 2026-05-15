@@ -14,7 +14,7 @@ public class AnnihilationVictorySO : VictoryConditionSO
     {
         bool anyAllyAlive = manager.UnitManager.AllUnits
             .Any(u => u.Data.isAlly && u.Data.currentHp > 0);
-            
+
         if (!anyAllyAlive)
         {
             return TurnManager.BattleState.Lost;

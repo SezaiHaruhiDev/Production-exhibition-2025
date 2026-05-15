@@ -9,5 +9,5 @@ public class EmotionEffectSet
     public Emotion emotion;
     public int level;
     public List<EffectData> effectDataList;
-    
+
 }

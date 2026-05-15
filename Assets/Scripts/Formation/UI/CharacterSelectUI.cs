@@ -198,7 +198,7 @@ public class CharacterSelectUI : MonoBehaviour
                 kvp.Value.SetActive(isInParty);
             }
         }
- 
+
         foreach (var kvp in _tempSelectHighlightDict)
         {
             if (kvp.Value != null)

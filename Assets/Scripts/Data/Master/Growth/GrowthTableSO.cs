@@ -9,7 +9,7 @@ public class GrowthTableSO : ScriptableObject
     [Header("Level Settings")]
     public int maxLevel = 99;
     public int expForMaxLevel = 1000000;
-    
+
     /// <summary>
     /// レベル進捗(0~1)に対する必要経験値のカーブ
     /// 時間軸(0=Lv1, 1=MaxLv) -> 値(0~1: 累積Exp割合)
@@ -52,7 +52,7 @@ public class GrowthTableSO : ScriptableObject
 
         // 簡易的な逆引き：本来はカーブの逆関数が必要だが、
         // 単調増加を前提として 1..MaxLevel でループチェックするか二分探索を行う
-        
+
         // 二分探索で探す
         int low = 1;
         int high = maxLevel;
@@ -63,7 +63,7 @@ public class GrowthTableSO : ScriptableObject
             int required = GetRequiredExpForLevel(mid);
 
             if (required == currentExp) return mid;
-            
+
             if (required < currentExp)
             {
                 low = mid + 1;
@@ -85,7 +85,7 @@ public class GrowthTableSO : ScriptableObject
     {
         if (level <= 1) return (0, 0, 0, 0, 0);
 
-        float t = (float)(level - 1) / ( maxLevel - 1);
+        float t = (float)(level - 1) / (maxLevel - 1);
         // レベル上限を超えている場合は1.0（カンスト）として扱う
         if (level > maxLevel) t = 1.0f;
 

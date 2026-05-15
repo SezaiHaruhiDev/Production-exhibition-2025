@@ -19,7 +19,7 @@ public class TurnOrderUIItem : MonoBehaviour
     public void Setup(BattleUnit unit, Sprite sprite, bool isNext)
     {
         if (unit == null || unit.Data == null) return;
-        
+
         if (sprite != null)
         {
             iconImage.sprite = sprite;
@@ -41,7 +41,7 @@ public class TurnOrderUIItem : MonoBehaviour
     public void AnimateTo(Vector3 localPos, bool isNext, float duration)
     {
         float targetScale = isNext ? nextScale : normalScale;
-        
+
         transform.DOKill();
         transform.DOLocalMove(localPos, duration).SetEase(Ease.OutQuart);
         transform.DOScale(targetScale, duration).SetEase(Ease.OutBack);
@@ -55,7 +55,7 @@ public class TurnOrderUIItem : MonoBehaviour
         transform.DOKill();
         // 左に画面外へ、かつフェードアウト（CanvasGroupがあれば）
         transform.DOLocalMoveX(transform.localPosition.x - 200, duration).SetEase(Ease.InBack);
-        
+
         CanvasGroup cg = GetComponent<CanvasGroup>();
         if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
         cg.DOFade(0, duration).OnComplete(() => Destroy(gameObject));

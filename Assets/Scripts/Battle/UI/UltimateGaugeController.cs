@@ -8,22 +8,22 @@ using DG.Tweening;
 public class UltimateGaugeController : MonoBehaviour
 {
     [Header("Components")]
-    [SerializeField] private Image gaugeFillImage; // Material: WaveGaugeShader
-    [SerializeField] private Image gaugeGlowImage; // Optional: Additional glow layer
+    [SerializeField] private Image gaugeFillImage;
+    [SerializeField] private Image gaugeGlowImage;
     [SerializeField] private CanvasGroup gaugeGroup;
     [SerializeField] private GameObject readyIndicator; // アルティメット準備完了時に表示する画像オブジェクト
-    
+
     [Header("Settings")]
     [SerializeField] private float fillDuration = 0.4f;
     [SerializeField] private Ease fillEase = Ease.OutCubic;
-    
+
     [Header("Wave Visuals")]
     [SerializeField] private float normalWaveAmp = 0.02f;
     [SerializeField] private float fullWaveAmp = 0.04f;
     [SerializeField] private float normalGlow = 1.0f;
     [SerializeField] private float fullGlow = 2.0f;
     [SerializeField] private float waveFrequency = 3.0f;
-    
+
     [Header("Debug")]
     [SerializeField, Range(0, 100)] private int debugValue;
 
@@ -33,7 +33,6 @@ public class UltimateGaugeController : MonoBehaviour
     private Tweener _fillTweener;
     private Sequence _pulseSequence;
 
-    // Shader Property IDs
     private static readonly int PropFillAmount = Shader.PropertyToID("_FillAmount");
     private static readonly int PropWaveAmp = Shader.PropertyToID("_WaveAmp");
     private static readonly int PropWaveFreq = Shader.PropertyToID("_WaveFreq");
@@ -43,15 +42,9 @@ public class UltimateGaugeController : MonoBehaviour
     {
         if (gaugeFillImage != null)
         {
-            // Instantiate material to allow individual control
             _gaugeMaterial = Instantiate(gaugeFillImage.material);
             gaugeFillImage.material = _gaugeMaterial;
-            
-            // UI Image should be fully filled to allow Shader to do the cutting/waving
-            // However, verify if user strictly wants Image.fillAmount used.
-            // If Image.fillAmount is used, the mesh is cut.
-            // We set it to 1 and control shader property for better wave visuals.
-            gaugeFillImage.fillAmount = 1f; 
+            gaugeFillImage.fillAmount = 1f;
         }
     }
 
@@ -70,7 +63,7 @@ public class UltimateGaugeController : MonoBehaviour
         // 変化量や通知なしで即時セット
         _currentValue = Mathf.Clamp(value, 0, max);
         _maxValue = max;
-        
+
         float ratio = (float)_currentValue / _maxValue;
         UpdateVisuals(ratio);
     }
@@ -83,7 +76,7 @@ public class UltimateGaugeController : MonoBehaviour
         // 変更がある場合のみTween
         int nextValue = Mathf.FloorToInt(current);
         int maxVal = Mathf.FloorToInt(max);
-        
+
         if (_currentValue == nextValue && _maxValue == maxVal) return;
 
         bool wasFull = IsFull();
@@ -95,12 +88,12 @@ public class UltimateGaugeController : MonoBehaviour
 
         // Tween Fill
         _fillTweener?.Kill();
-        
+
         // Custom Tween for Shader Property
         _fillTweener = DOVirtual.Float(
-            GetShaderFillAmount(), 
-            targetRatio, 
-            fillDuration, 
+            GetShaderFillAmount(),
+            targetRatio,
+            fillDuration,
             (val) => SetShaderFillAmount(val)
         ).SetEase(fillEase);
 
@@ -114,17 +107,13 @@ public class UltimateGaugeController : MonoBehaviour
             StopFullEffect();
         }
     }
-    
+
     /// <summary>
     /// アルティメット発動時の演出
     /// </summary>
     public void PlayUseAnimation()
     {
-        // Flash / Pop / Reset
         transform.DOPunchScale(Vector3.one * 0.2f, 0.3f, 10, 1);
-        
-        // Immediate drop or fast drop?
-        // Prompt says "Gauge goes to 0 at once"
         UpdateView(0, _maxValue);
     }
 
@@ -132,10 +121,9 @@ public class UltimateGaugeController : MonoBehaviour
 
     private void UpdateVisuals(float ratio)
     {
-        // Immediate Update
         SetShaderFillAmount(ratio);
         SetShaderWaveFreq(waveFrequency);
-        
+
         if (IsFull()) PlayFullEffect();
         else StopFullEffect();
     }
@@ -165,23 +153,16 @@ public class UltimateGaugeController : MonoBehaviour
     private void PlayFullEffect()
     {
         if (_pulseSequence != null && _pulseSequence.IsActive()) return;
-
-        // Visual Queue: "Stored energy"
-        // Increase Wave Amplitude
         if (_gaugeMaterial != null)
         {
             _gaugeMaterial.DOFloat(fullWaveAmp, PropWaveAmp, 0.5f);
-            
+
             // Loop Glow Pulse
             _pulseSequence = DOTween.Sequence();
             _pulseSequence.Append(_gaugeMaterial.DOFloat(fullGlow * 1.5f, PropGlowPower, 0.8f).SetEase(Ease.InOutSine));
             _pulseSequence.Append(_gaugeMaterial.DOFloat(fullGlow, PropGlowPower, 0.8f).SetEase(Ease.InOutSine));
             _pulseSequence.SetLoops(-1);
         }
-        
-        // Scale Punch looping? Or just one punch?
-        // "Gauge lightly scale punch... Assert usability"
-        // transform.DOScale(1.05f, 1.0f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutQuad);
 
         // ゲージ最大時のパーティクル散布（UIEffectSpawner）
         UIEffectSpawner.Instance?.Play();
@@ -207,8 +188,6 @@ public class UltimateGaugeController : MonoBehaviour
         // 準備完了インジケーターOFF
         if (readyIndicator != null) readyIndicator.SetActive(false);
     }
-
-#if UNITY_EDITOR
     private void Update()
     {
         // 実行開始直後の debugValue (0) による上書きを防ぎ、
@@ -220,12 +199,8 @@ public class UltimateGaugeController : MonoBehaviour
         }
     }
     private int _lastDebugValue = -1;
-#endif
-
-#if UNITY_EDITOR
     private void OnValidate()
     {
         // ここでは何もしない、または DOTween を含まない即時更新のみを行う
     }
-#endif
 }
