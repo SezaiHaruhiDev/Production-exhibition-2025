@@ -37,7 +37,7 @@ namespace Yagir.inc.HierarchyIcons.Editor
 
         static HierarchyIcons()
         {
-            EditorApplication.hierarchyWindowItemOnGUI += HandleHierarchyWindowItemOnGUI;
+            EditorApplication.hierarchyWindowItemByEntityIdOnGUI += HandleHierarchyWindowItemOnGUI;
         }
 
         private static readonly Vector2 offset = new Vector2(18, 0);
@@ -47,9 +47,9 @@ namespace Yagir.inc.HierarchyIcons.Editor
         private static GUIContent tmpText;
         private static Dictionary<Transform, bool> openedFolders = new Dictionary<Transform, bool>(); 
 
-        private static void HandleHierarchyWindowItemOnGUI(int instanceID, Rect selectionRect)
+        private static void HandleHierarchyWindowItemOnGUI(EntityId entityId, Rect selectionRect)
         {
-            Object obj = EditorUtility.InstanceIDToObject(instanceID);
+            Object obj = EditorUtility.EntityIdToObject(entityId);
 
             switch (Event.current.type)
             {
